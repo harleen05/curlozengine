@@ -1,0 +1,37 @@
+cmake_minimum_required(VERSION 3.25)
+project(CurlozEngine VERSION 0.1)
+
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Sources
+file(GLOB_RECURSE SOURCES src/*.cpp)
+
+add_executable(${PROJECT_NAME} ${SOURCES})
+
+target_include_directories(${PROJECT_NAME} PRIVATE include)
+
+# Vulkan
+find_package(Vulkan REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE Vulkan::Vulkan)
+
+# Always use static libs
+set(BUILD_SHARED_LIBS OFF)
+
+# External Libs
+
+#GLFW
+add_subdirectory(external/glfw)
+target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+
+#ENTT
+add_subdirectory(external/entt)
+target_link_libraries(${PROJECT_NAME} PRIVATE EnTT::EnTT)
+
+#JOLT
+set(JPH_USE_DX12 OFF)
+set(JPH_USE_VK OFF)
+set(JPH_USE_MTL OFF)
+add_subdirectory(external/jolt/Build)
+target_link_libraries(${PROJECT_NAME} PRIVATE Jolt)
