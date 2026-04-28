@@ -6,11 +6,11 @@ This document is for contributors working on Curloz Engine. Read this before wri
 
 ## Who Owns What
 
-| Area | Owner | Scope |
-|---|---|---|
-| Renderer, Vulkan, pipelines, sync, swapchain | @curl0z | Everything under `src/renderer/` |
-| ECS, EnTT systems, components | ECS guy | Everything under `src/ecs/` |
-| Physics, Jolt integration | Physics guy | Everything under `src/physics/` |
+| Area | Owner      | Scope |
+|---|------------|---|
+| Renderer, Vulkan, pipelines, sync, swapchain | @curl0z    | Everything under `src/renderer/` |
+| ECS, EnTT systems, components | unassigned | Everything under `src/ecs/` |
+| Physics, Jolt integration | unassigned | Everything under `src/physics/` |
 
 **Do not touch code outside your area without discussing it first.** If you need something from another area, ask. Don't patch it yourself.
 
@@ -133,6 +133,79 @@ find src include -name "*.cpp" -o -name "*.hpp" | xargs clang-format -i
 
 ---
 
+## Doxygen Comment Standards
+
+Every file, struct, and function must be documented. Use `///` style comments.
+
+### File Header
+
+Every `.cpp` and `.hpp` file starts with:
+
+```cpp
+/**
+ * @file PhysicsSystem.hpp
+ * @author Your Name
+ * @brief Brief one line description of what this file contains
+ */
+```
+
+### Structs and Classes
+
+```cpp
+/**
+ * @brief Stores position, rotation and scale of an entity in world space.
+ *
+ * This is the handshake between the ECS and physics systems.
+ * Do not modify the layout without consulting @curl0z.
+ */
+struct TransformComponent
+{
+        glm::vec3 position; ///< World space position
+        glm::quat rotation; ///< Rotation as quaternion
+        glm::vec3 scale;    ///< Non-uniform scale
+};
+```
+
+### Functions
+
+```cpp
+/**
+ * @brief Submits a mesh for rendering this frame.
+ *
+ * @param data Mesh geometry and material data to submit
+ * @return True if submission succeeded, false if render queue is full
+ */
+bool submitMesh(const MeshSubmitData& data);
+```
+
+### Enum
+
+```cpp
+/**
+ * @brief Describes the current state of the physics body.
+ */
+enum class BodyState
+{
+        Active,   ///< Body is being simulated
+        Sleeping, ///< Body has come to rest
+        Static    ///< Body never moves
+};
+```
+
+### Quick Reference
+
+| Tag | Use |
+|---|---|
+| `@file` | File name |
+| `@author` | Who wrote it |
+| `@brief` | One line summary |
+| `@param` | Function parameter |
+| `@return` | Return value |
+| `@note` | Extra info |
+| `@warning` | Something that can go wrong |
+| `@todo` | Planned work |
+ 
+---
 ## Doxygen Docs
 
 Docs are **not committed to the repo**. They are auto-generated and hosted via GitHub Pages on every push to `main`.
