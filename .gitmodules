@@ -7,3 +7,6 @@
 [submodule "external/jolt"]
 	path = external/jolt
 	url = https://github.com/jrouwe/JoltPhysics.git
+[submodule "external/tomlplusplus"]
+	path = external/tomlplusplus
+	url = https://github.com/marzer/tomlplusplus.git
