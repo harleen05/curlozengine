@@ -19,7 +19,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Vulkan::Vulkan)
 # Always use static libs
 set(BUILD_SHARED_LIBS OFF)
 
-# External Libs
+# External Libs, This should be the last section, everything below this is just linking third party libraries
 
 #GLFW
 add_subdirectory(external/glfw)
@@ -35,3 +35,7 @@ set(JPH_USE_VK OFF)
 set(JPH_USE_MTL OFF)
 add_subdirectory(external/jolt/Build)
 target_link_libraries(${PROJECT_NAME} PRIVATE Jolt)
+
+#TOMLPLUSPLUS
+add_subdirectory(external/tomlplusplus)
+target_link_libraries(${PROJECT_NAME} PRIVATE tomlplusplus::tomlplusplus)
