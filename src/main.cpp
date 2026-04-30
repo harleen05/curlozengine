@@ -1,5 +1,5 @@
 /**
-* @file main.cpp
+ * @file main.cpp
  * @author curl0z
  * @brief Entry point for Curloz Engine.
  *
@@ -10,14 +10,15 @@
  * config first, then everything that reads from it.
  */
 
-#include "core/logs.hpp"
 #include "config/config.hpp"
+#include "core/logs.hpp"
 
 int main()
 {
 	// Initialize config first — all subsystems read from it
 	clz::config::init();
-	if (clz::log::errorOccurred()) return 1;
+	if (clz::log::errorOccurred())
+		return 1;
 	clz::config::printAppName();
 	clz::config::printAppVersion();
 
