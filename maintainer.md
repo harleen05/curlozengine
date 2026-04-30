@@ -102,6 +102,7 @@ No "fixed stuff". No "wip" on main. No giant commits that touch everything.
 - **Classes** — `PascalCase`
 - **Members/variables** — `camelCase`
 - **Statics** — `s_` prefix
+- **Sub system variables** — every variable described at sub system level must be prefixed as per the subsystem's name. For example in physics, variables must be prefixed with `ph_` etc..
 
 Enforced by `.clang-format` and `.editorconfig` in the repo root.
 
