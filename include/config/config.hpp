@@ -36,7 +36,7 @@ namespace clz::config
 	 * @param defaultVal Value returned if section or key is missing.
 	 * @return The integer value or defaultVal.
 	 */
-	int getInt(const char* section, const char* key, int defaultVal);
+	int getInt(std::string_view section, std::string_view key, int defaultVal);
 
 	/**
 	 * @brief Reads a float value from the config.
@@ -45,7 +45,7 @@ namespace clz::config
 	 * @param defaultVal Value returned if section or key is missing.
 	 * @return The float value or defaultVal.
 	 */
-	float getFloat(const char* section, const char* key, float defaultVal);
+	float getFloat(std::string_view section, std::string_view key, float defaultVal);
 
 	/**
 	 * @brief Reads a boolean value from the config.
@@ -54,7 +54,7 @@ namespace clz::config
 	 * @param defaultVal Value returned if section or key is missing.
 	 * @return The bool value or defaultVal.
 	 */
-	bool getBool(const char* section, const char* key, bool defaultVal);
+	bool getBool(std::string_view section, std::string_view key, bool defaultVal);
 
 	/**
 	 * @brief Reads a string value from the config.
@@ -63,12 +63,14 @@ namespace clz::config
 	 * @param defaultVal Value returned if section or key is missing.
 	 * @return The string value or defaultVal.
 	 */
-	std::string getString(const char* section, const char* key, const char* defaultVal);
+	std::string getString(std::string_view section, std::string_view key,
+			      std::string_view defaultVal);
 
 	/**
-	 * @brief Logs the engine name from config.
+	 * @brief Returns application name
+	 * @return returns application name from config.
 	 */
-	void printAppName();
+	std::string getAppName();
 
 	/**
 	 * @brief Logs the engine version from config as major.minor.patch.

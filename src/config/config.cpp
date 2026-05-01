@@ -17,7 +17,7 @@ namespace clz::config
 	void init()
 	{
 		auto result = toml::parse_file("config/engine.toml");
-		if (!result)
+		if (!result) [[unlikely]]
 		{
 			clz::log::error(
 			    "Failed to parse engine configuration file: config/engine.toml");
@@ -27,7 +27,7 @@ namespace clz::config
 		clz::log::info("Config loaded");
 	}
 
-	int getInt(const char* section, const char* key, int defaultVal)
+	int getInt(const std::string_view section, const std::string_view key, int defaultVal)
 	{
 		if (!cfg_config.contains(section))
 		{
@@ -46,7 +46,7 @@ namespace clz::config
 		return cfg_config[section][key].value_or(defaultVal);
 	}
 
-	float getFloat(const char* section, const char* key, float defaultVal)
+	float getFloat(const std::string_view section, const std::string_view key, float defaultVal)
 	{
 		if (!cfg_config.contains(section))
 		{
@@ -65,7 +65,7 @@ namespace clz::config
 		return cfg_config[section][key].value_or(defaultVal);
 	}
 
-	bool getBool(const char* section, const char* key, bool defaultVal)
+	bool getBool(const std::string_view section, const std::string_view key, bool defaultVal)
 	{
 		if (!cfg_config.contains(section))
 		{
@@ -84,12 +84,12 @@ namespace clz::config
 		return cfg_config[section][key].value_or(defaultVal);
 	}
 
-	std::string getString(const char* section, const char* key, const char* defaultVal)
+	std::string getString(const std::string_view section, const std::string_view key,
+			      const std::string_view defaultVal)
 	{
 		if (!cfg_config.contains(section))
 		{
 			clz::log::warn("Config section not found: " + std::string(section));
-			return defaultVal;
 		}
 
 		auto sec = cfg_config[section];
@@ -97,16 +97,15 @@ namespace clz::config
 		{
 			clz::log::warn("Config key not found: " + std::string(section) + "[" +
 				       std::string(key) + "]");
-			return defaultVal;
+			return std::string(defaultVal);
 		}
 
-		return cfg_config[section][key].value_or(defaultVal);
+		return cfg_config[section][key].value_or(std::string(defaultVal));
 	}
 
-	void printAppName()
+	std::string getAppName()
 	{
-		clz::log::info("Welcome to: " +
-			       clz::config::getString("engine", "name", "Unknown"));
+		return clz::config::getString("engine", "name", "Unknown");
 	}
 
 	void printAppVersion()
