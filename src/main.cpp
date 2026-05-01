@@ -14,6 +14,7 @@
 #include "core/enginestate.hpp"
 #include "core/logs.hpp"
 #include "window/window.hpp"
+#include "core/time.hpp"
 
 int main()
 {
@@ -29,6 +30,9 @@ int main()
 	// Print App details
 	clz::log::info("Welcome to " + clz::config::getAppName());
 	clz::config::printAppVersion();
+
+	// Start clock
+	clz::time::init();
 
 	// Initialize Window. Should be the first subsystem to initialize
 	clz::window::init();
