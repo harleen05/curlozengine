@@ -9,7 +9,7 @@
 #include "logs.hpp"
 #include <string>
 
-namespace clz
+namespace clz::state
 {
 	enum class EngineState
 	{

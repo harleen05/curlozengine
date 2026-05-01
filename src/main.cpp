@@ -41,8 +41,9 @@ int main()
 	/*****************************************************
 	 ***************      UPDATE       *******************
 	 *****************************************************/
+
 	// Main loop. Runs until g_engineState is set to EngineState::Shutdown
-	while (clz::g_engineState == clz::EngineState::Running)
+	while (clz::state::g_engineState == clz::state::EngineState::Running)
 	{
 		clz::window::update();
 	}

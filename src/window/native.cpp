@@ -1,5 +1,6 @@
 #include "window/native.hpp"
 #include "config/config.hpp"
+#include "core/enginestate.hpp"
 #include "core/logs.hpp"
 
 namespace clz::window
@@ -31,8 +32,13 @@ namespace clz::window
 		clz::log::info("Window shutdown successful");
 	}
 
-	void pollEventsGLFW(types::window& rWindow)
+	void pollEventsGLFW(const types::window& rWindow)
 	{
 		glfwPollEvents();
+
+		if (glfwWindowShouldClose(rWindow.Window))
+		{
+			clz::state::setEngineState(clz::state::EngineState::Shutdown, "window poll events");
+		}
 	}
 } // namespace clz::window

@@ -35,6 +35,6 @@ namespace clz::window
 	 * @brief Polls GLFW events and checks for window close or escape key.
 	 * @param rWindow Reference to the active window.
 	 */
-	void pollEventsGLFW(types::window& rWindow);
+	void pollEventsGLFW(const types::window& rWindow);
 
 } // namespace clz::window
