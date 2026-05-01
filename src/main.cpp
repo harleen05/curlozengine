@@ -13,8 +13,8 @@
 #include "config/config.hpp"
 #include "core/enginestate.hpp"
 #include "core/logs.hpp"
-#include "window/window.hpp"
 #include "core/time.hpp"
+#include "window/window.hpp"
 
 int main()
 {
@@ -39,8 +39,6 @@ int main()
 	if (clz::log::errorOccurred()) [[unlikely]]
 		return 1;
 	clz::log::info("Window initialized");
-
-
 
 	/*****************************************************
 	 ***************      UPDATE       *******************

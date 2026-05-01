@@ -29,7 +29,8 @@ namespace clz::time
 	/// @brief Target refresh rate in Hz. Used to compute target delta time.
 	inline uint8_t t_refreshRate = 60;
 
-	/// @brief Target delta time in seconds derived from refresh rate. Only applied if vsync is enabled
+	/// @brief Target delta time in seconds derived from refresh rate. Only applied if vsync is
+	/// enabled
 	inline float t_targetDeltaTime = 1.0f / 60;
 
 	/**
@@ -61,14 +62,16 @@ namespace clz::time
 	inline float getDeltaTime()
 	{
 		t_timeTakenThisFrame = std::chrono::high_resolution_clock::now();
-		float deltaTime = std::chrono::duration<float>(t_timeTakenThisFrame - t_timeTakenLastFrame).count();
+		float deltaTime =
+		    std::chrono::duration<float>(t_timeTakenThisFrame - t_timeTakenLastFrame)
+			.count();
 		t_timeTakenLastFrame = t_timeTakenThisFrame;
 
 		// Software frame cap — sleep remaining time if frame finished early
 		if (t_VSync && deltaTime < t_targetDeltaTime)
 		{
 			std::this_thread::sleep_for(
-				std::chrono::duration<float>(t_targetDeltaTime - deltaTime));
+			    std::chrono::duration<float>(t_targetDeltaTime - deltaTime));
 			deltaTime = t_targetDeltaTime;
 		}
 

@@ -38,7 +38,8 @@ namespace clz::window
 
 		if (glfwWindowShouldClose(rWindow.Window))
 		{
-			clz::state::setEngineState(clz::state::EngineState::Shutdown, "window poll events");
+			clz::state::setEngineState(clz::state::EngineState::Shutdown,
+						   "window poll events");
 		}
 	}
 } // namespace clz::window
