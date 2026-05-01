@@ -14,19 +14,15 @@
 #include "core/enginestate.hpp"
 #include "core/logs.hpp"
 #include "core/time.hpp"
+#include "scripting/scripting.hpp"
 #include "window/window.hpp"
 
 int main()
 {
-	/*****************************************************
-	 *******************INITIALIZATION********************
-	 *****************************************************/
-
 	// Initialize config first. All subsystems depend on it
 	clz::config::init();
 	if (clz::log::errorOccurred()) [[unlikely]]
 		return 1;
-
 	// Print App details
 	clz::log::info("Welcome to " + clz::config::getAppName());
 	clz::config::printAppVersion();
@@ -40,19 +36,19 @@ int main()
 		return 1;
 	clz::log::info("Window initialized");
 
-	/*****************************************************
-	 ***************      UPDATE       *******************
-	 *****************************************************/
+	clz::script::init();
+	clz::script::runScript("assets/scripts/test.lua");
+
 
 	// Main loop. Runs until g_engineState is set to EngineState::Shutdown
 	while (clz::state::g_engineState == clz::state::EngineState::Running)
 	{
+		clz::script::runScript("assets/scripts/test.lua");
 		clz::window::update();
 	}
 
-	/*****************************************************
-	 ***************      SHUTDOWN       *****************
-	 *****************************************************/
+
+	// Shut down
 	clz::window::shutdown();
 	clz::log::info("Exiting successfully");
 	return 0;

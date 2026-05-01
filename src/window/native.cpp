@@ -5,7 +5,7 @@
 
 namespace clz::window
 {
-	std::expected<void, std::string> initializeGLFW(types::window& rWindow)
+	std::expected<void, std::string> initializeGLFW(GLFWwindow **pWindow)
 	{
 		const int width = clz::config::getInt("window", "width", 800);
 		const int height = clz::config::getInt("window", "height", 600);
@@ -15,28 +15,28 @@ namespace clz::window
 		glfwInit();
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-		rWindow.Window = glfwCreateWindow(width, height, clz::config::getAppName().c_str(),
+		*pWindow = glfwCreateWindow(width, height, clz::config::getAppName().c_str(),
 						  nullptr, nullptr);
-		if (!rWindow.Window)
+		if (!(*pWindow))
 			return std::unexpected("Could not create window handle");
 
 		return {};
 	}
 
-	void shutdownGLFW(types::window& rWindow)
+	void shutdownGLFW(GLFWwindow **pWindow)
 	{
-		glfwDestroyWindow(rWindow.Window);
-		rWindow.Window = nullptr;
+		glfwDestroyWindow(*pWindow);
+		pWindow = nullptr;
 		glfwTerminate();
 
 		clz::log::info("Window shutdown successful");
 	}
 
-	void pollEventsGLFW(const types::window& rWindow)
+	void pollEventsGLFW(GLFWwindow **pWindow)
 	{
 		glfwPollEvents();
 
-		if (glfwWindowShouldClose(rWindow.Window))
+		if (glfwWindowShouldClose(*pWindow))
 		{
 			clz::state::setEngineState(clz::state::EngineState::Shutdown,
 						   "window poll events");

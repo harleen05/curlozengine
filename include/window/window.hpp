@@ -11,6 +11,8 @@
 
 #pragma once
 
+#include "GLFW/glfw3.h"
+
 namespace clz::window
 {
 	/**
@@ -31,5 +33,12 @@ namespace clz::window
 	 * or escape is pressed.
 	 */
 	void update();
+
+	/**
+	 * @brief Returns window handle
+	 * @warning not to be used outside window subsystem
+	 * @return pointer to GLFWwindow
+	 */
+	GLFWwindow *getWindowHandle();
 
 } // namespace clz::window

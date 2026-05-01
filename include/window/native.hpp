@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "window_types.hpp"
+#include "GLFW/glfw3.h"
 #include <expected>
 #include <string>
 
@@ -20,21 +20,21 @@ namespace clz::window
 	 *
 	 * @note Reads window dimensions from the config subsystem.
 	 *
-	 * @param rWindow Reference to the window struct to populate.
+	 * @param pWindow pointer to the GLFW window
 	 * @return void on success, error string on failure.
 	 */
-	std::expected<void, std::string> initializeGLFW(types::window& rWindow);
+	std::expected<void, std::string> initializeGLFW(GLFWwindow** pWindow);
 
 	/**
 	 * @brief Destroys the GLFW window and terminates GLFW.
-	 * @param rWindow Reference to the window struct to destroy.
+	 * @param pWindow pointer to the window handle to destroy.
 	 */
-	void shutdownGLFW(types::window& rWindow);
+	void shutdownGLFW(GLFWwindow **pWindow);
 
 	/**
 	 * @brief Polls GLFW events and checks for window close or escape key.
-	 * @param rWindow Reference to the active window.
+	 * @param pWindow pointer to the active window.
 	 */
-	void pollEventsGLFW(const types::window& rWindow);
+	void pollEventsGLFW(GLFWwindow **pWindow);
 
 } // namespace clz::window

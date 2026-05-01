@@ -2,19 +2,18 @@
 #include "window/window.hpp"
 #include "core/logs.hpp"
 #include "window/native.hpp"
-#include "window/window_types.hpp"
 
 namespace clz::window
 {
 	/// @brief Internal window state.
-	types::window w_window;
+	static GLFWwindow* w_window = nullptr;
 } // namespace clz::window
 
 namespace clz::window
 {
 	void init()
 	{
-		auto result = initializeGLFW(w_window);
+		auto result = initializeGLFW(&w_window);
 		if (!result) [[unlikely]]
 		{
 			clz::log::error(result.error());
@@ -24,11 +23,17 @@ namespace clz::window
 
 	void shutdown()
 	{
-		shutdownGLFW(w_window);
+		shutdownGLFW(&w_window);
 	}
 
 	void update()
 	{
-		pollEventsGLFW(w_window);
+		pollEventsGLFW(&w_window);
+	}
+
+
+	GLFWwindow *getWindowHandle()
+	{
+		return w_window;
 	}
 } // namespace clz::window

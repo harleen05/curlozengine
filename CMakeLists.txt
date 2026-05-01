@@ -39,3 +39,10 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Jolt)
 #TOMLPLUSPLUS
 add_subdirectory(external/tomlplusplus)
 target_link_libraries(${PROJECT_NAME} PRIVATE tomlplusplus::tomlplusplus)
+
+#LUA
+add_subdirectory(external/lua)
+target_link_libraries(${PROJECT_NAME} PRIVATE sol2 lua_static)
+#SOL2
+add_subdirectory(external/sol2)
+target_link_libraries(${PROJECT_NAME} PRIVATE sol2)
