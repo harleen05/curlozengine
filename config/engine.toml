@@ -7,3 +7,5 @@ version_patch = 0
 [window]
 width = 1920
 height = 1080
+vsync = false
+refreshrate = 120
