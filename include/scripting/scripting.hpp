@@ -7,6 +7,7 @@
 #pragma once
 
 #include <string>
+#include <sol/sol.hpp>
 
 namespace clz::script
 {
@@ -14,6 +15,12 @@ namespace clz::script
 	 * @brief Initializes the Lua state and exposes engine bindings.
 	 */
 	void init();
+
+	/**
+	 * @brief Registers all engine functions and constants into the Lua state.
+	 * @param rLua Reference to the active Lua state.
+	 */
+	void registerLuaInterface(sol::state& rLua);
 
 	/**
 	 * @brief Executes a Lua script file.

@@ -36,14 +36,13 @@ int main()
 		return 1;
 	clz::log::info("Window initialized");
 
-	clz::script::init();
-	clz::script::runScript("assets/scripts/test.lua");
 
+	// Initialize script at last
+	clz::script::init();
 
 	// Main loop. Runs until g_engineState is set to EngineState::Shutdown
 	while (clz::state::g_engineState == clz::state::EngineState::Running)
 	{
-		clz::script::runScript("assets/scripts/test.lua");
 		clz::window::update();
 	}
 

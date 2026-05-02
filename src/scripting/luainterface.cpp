@@ -1,18 +1,17 @@
-#include "scripting/luafunctions.hpp"
+/**
+ * @file luainterface.cpp
+ * @author curl0z
+ * @brief Lua scripting interface implementation
+ */
+
+#include "scripting/luainterface.hpp"
 #include "window/keyboard.hpp"
 #include "core/logs.hpp"
 
 namespace clz::script
 {
-	void registerLuaFunctions(sol::state &rLua)
+	void bindKeyboardKeys(sol::state& rLua)
 	{
-		// expose engine log to lua
-		rLua.set_function("log", [](const std::string& msg)
-		{
-			clz::log::info(msg);
-		});
-
-
 		// ALl keyboard binds
 		rLua["Key"] = rLua.create_table_with(
 			"Escape",    static_cast<int>(clz::window::Key::Escape),
@@ -27,14 +26,21 @@ namespace clz::script
 			"Left",      static_cast<int>(clz::window::Key::Left),
 			"Right",     static_cast<int>(clz::window::Key::Right)
 		);
-		rLua.set_function("isKeyPressed", [](int key)
-		{
-			return clz::window::isPressed(static_cast<clz::window::Key>(key));
-		});
-
-		rLua.set_function("isKeyReleased", [](int key)
-		{
-			return clz::window::isReleased(static_cast<clz::window::Key>(key));
-		});
 	}
+
+	void log(const std::string& msg)
+	{
+		clz::log::info(msg);
+	}
+
+	bool isKeyPressed(int key)
+	{
+		return clz::window::isPressed(static_cast<clz::window::Key>(key));
+	}
+
+	bool isKeyReleased(int key)
+	{
+		return clz::window::isReleased(static_cast<clz::window::Key>(key));
+	}
+
 }
