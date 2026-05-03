@@ -1,3 +1,7 @@
+/*
+ * @file vulkanhelper.hpp
+ * @brief Public header to help vulkan
+ */
 #pragma once
 
 #include <expected>

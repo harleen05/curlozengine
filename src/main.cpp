@@ -50,7 +50,6 @@ int main()
 	{
 		clz::window::update();
 		clz::renderer::update(clz::time::getDeltaTime());
-		clz::script::runScript("assets/scripts/test.lua");
 	}
 
 
