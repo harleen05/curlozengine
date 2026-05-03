@@ -46,3 +46,11 @@ target_link_libraries(${PROJECT_NAME} PRIVATE sol2 lua_static)
 #SOL2
 add_subdirectory(external/sol2)
 target_link_libraries(${PROJECT_NAME} PRIVATE sol2)
+
+#OPENAL-SOFT
+set(ALSOFT_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(ALSOFT_UTILS OFF CACHE BOOL "" FORCE)
+set(ALSOFT_TESTS OFF CACHE BOOL "" FORCE)
+add_subdirectory(external/openal-soft)
+target_compile_options(OpenAL PRIVATE -Wno-function-effects)
+target_link_libraries(${PROJECT_NAME} PRIVATE OpenAL)
