@@ -30,7 +30,6 @@ namespace clz::window
 	 * @brief Polls GLFW events and checks window close state.
 	 *
 	 * Sets g_engineState to EngineState::Shutdown if the window is closed
-	 * or escape is pressed.
 	 */
 	void update();
 
@@ -41,4 +40,5 @@ namespace clz::window
 	 */
 	GLFWwindow *getWindowHandle();
 
+	void getFramebufferExtents(int *width, int *height);
 } // namespace clz::window

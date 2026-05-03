@@ -1,3 +1,8 @@
+/*
+ * @file native.cpp
+ * @author curl0z
+ * @brief implements all the internal GLFW functions
+ */
 #include "window/native.hpp"
 #include "config/config.hpp"
 #include "core/enginestate.hpp"

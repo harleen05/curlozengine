@@ -1,3 +1,8 @@
+/*
+ * @file keyboard.cpp
+ * @author curl0z
+ * @brief implementation of keyboard events of the window
+ */
 #include "window/keyboard.hpp"
 #include "window/window.hpp"
 
