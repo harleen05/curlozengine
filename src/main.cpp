@@ -17,6 +17,7 @@
 #include "scripting/scripting.hpp"
 #include "renderer/renderer.hpp"
 #include "window/window.hpp"
+#include "audio/audio.hpp"
 
 int main()
 {
@@ -40,6 +41,8 @@ int main()
 	// Initialize renderer
 	clz::renderer::init();
 
+	// Initialize audio
+	clz::audio::init();
 
 	// Initialize script at last
 	clz::script::init();
@@ -54,6 +57,7 @@ int main()
 
 
 	// Shut down
+	clz::audio::shutdown();
 	clz::renderer::shutdown();
 	clz::window::shutdown();
 	clz::log::info("Exiting successfully");
