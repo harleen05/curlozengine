@@ -1,3 +1,8 @@
+/*
+ * @file window.cpp
+ * @author curl0z
+ * @brief Implementation of the window public header
+ */
 #define GLFW_INCLUDE_VULKAN
 #include "window/window.hpp"
 #include "core/logs.hpp"
@@ -31,9 +36,13 @@ namespace clz::window
 		pollEventsGLFW(&w_window);
 	}
 
-
 	GLFWwindow *getWindowHandle()
 	{
 		return w_window;
+	}
+
+	void getFramebufferExtents(int *width, int *height)
+	{
+		glfwGetFramebufferSize(w_window, width, height);
 	}
 } // namespace clz::window

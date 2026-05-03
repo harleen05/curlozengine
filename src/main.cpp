@@ -15,6 +15,7 @@
 #include "core/logs.hpp"
 #include "core/time.hpp"
 #include "scripting/scripting.hpp"
+#include "renderer/renderer.hpp"
 #include "window/window.hpp"
 
 int main()
@@ -36,18 +37,24 @@ int main()
 		return 1;
 	clz::log::info("Window initialized");
 
+	// Initialize renderer
+	clz::renderer::init();
+
 
 	// Initialize script at last
 	clz::script::init();
+	clz::script::runScript("assets/scripts/test.lua");
 
 	// Main loop. Runs until g_engineState is set to EngineState::Shutdown
 	while (clz::state::g_engineState == clz::state::EngineState::Running)
 	{
 		clz::window::update();
+		clz::renderer::update(clz::time::getDeltaTime());
 	}
 
 
 	// Shut down
+	clz::renderer::shutdown();
 	clz::window::shutdown();
 	clz::log::info("Exiting successfully");
 	return 0;
