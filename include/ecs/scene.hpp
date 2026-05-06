@@ -5,5 +5,5 @@
 
 namespace clz::ecs
 {
-	std::expected<void, std::string> loadScene();
+	std::expected<void, std::string> loadEntities();
 }

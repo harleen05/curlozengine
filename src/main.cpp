@@ -18,6 +18,7 @@
 #include "renderer/renderer.hpp"
 #include "window/window.hpp"
 #include "audio/audio.hpp"
+#include "ecs/ecs.hpp"
 
 int main()
 {
@@ -36,10 +37,16 @@ int main()
 	clz::window::init();
 	if (clz::log::errorOccurred()) [[unlikely]]
 		return 1;
-	clz::log::info("Window initialized");
 
 	// Initialize renderer
 	clz::renderer::init();
+	if (clz::log::errorOccurred()) [[unlikely]]
+		return 1;
+
+	// Initialize entities
+	clz::ecs::init();
+	if (clz::log::errorOccurred()) [[unlikely]]
+		return 1;
 
 	// Initialize audio
 	clz::audio::init();
