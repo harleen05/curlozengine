@@ -25,7 +25,7 @@ namespace clz::renderer
 			return std::unexpected("could not create command pool :(");
 		}
 
-		clz::log::info("created command pool");
+		clz::log::debug("created command pool");
 		return {};
 	}
 
@@ -47,7 +47,7 @@ namespace clz::renderer
 			return std::unexpected("renderer: failed to create command buffers");
 		}
 
-		clz::log::info("created command buffers");
+		clz::log::debug("created command buffers");
 
 		return {};
 	}

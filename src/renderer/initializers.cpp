@@ -31,7 +31,7 @@ namespace clz::renderer
 		if (!logicalDeviceResult)
 			return std::unexpected(logicalDeviceResult.error());
 
-		clz::log::info("initialized device context successfully");
+		clz::log::debug("renderer: initialized device context successfully");
 
 		return {};
 	}

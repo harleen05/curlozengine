@@ -49,7 +49,7 @@ namespace clz::renderer
 				    "Extension: " + std::string(requiredExtension) +
 				    " not available");
 		}
-		clz::log::info("All required instance extensions present");
+		clz::log::debug("All required instance extensions present");
 		return {};
 	}
 	std::expected<void, std::string>
@@ -76,7 +76,7 @@ namespace clz::renderer
 			}
 		}
 
-		clz::log::info("All requested layers present");
+		clz::log::debug("All requested layers present");
 		return {};
 	}
 
@@ -143,7 +143,7 @@ namespace clz::renderer
 			return std::unexpected("Could not create instance");
 		}
 
-		clz::log::info("renderer: created instance");
+		clz::log::debug("renderer: created instance");
 		return {};
 	}
 
@@ -154,7 +154,7 @@ namespace clz::renderer
 		if (!result)
 			return std::unexpected(result.error());
 
-		clz::log::info("Created window surface");
+		clz::log::debug("Created window surface");
 		return {};
 	}
 
@@ -250,7 +250,7 @@ namespace clz::renderer
 		VkPhysicalDeviceProperties selecrtedDeviceProperties;
 		vkGetPhysicalDeviceProperties(r_deviceContext.gpu, &selecrtedDeviceProperties);
 
-		clz::log::info("Using GPU: " + std::string(selecrtedDeviceProperties.deviceName));
+		clz::log::debug("Using GPU: " + std::string(selecrtedDeviceProperties.deviceName));
 
 		return {};
 	}
@@ -288,7 +288,7 @@ namespace clz::renderer
 			}
 		}
 
-		clz::log::info("All device extensions present");
+		clz::log::debug("All device extensions present");
 		return {};
 	}
 
@@ -355,14 +355,14 @@ namespace clz::renderer
 			clz::log::error("Failed to create renderer's logical device");
 			return std::unexpected("Failed to create renderer's logical device");
 		}
-		clz::log::info("created vulkan logical device");
+		clz::log::debug("created vulkan logical device");
 
 		vkGetDeviceQueue(r_deviceContext.device, r_deviceContext.graphicsFamily.value(), 0,
 				 &r_deviceContext.graphicsQueue);
 		vkGetDeviceQueue(r_deviceContext.device, r_deviceContext.presentFamily.value(), 0,
 				 &r_deviceContext.presentQueue);
 
-		clz::log::info("created logical device");
+		clz::log::debug("created logical device");
 
 		return {};
 	}
@@ -370,18 +370,18 @@ namespace clz::renderer
 	void destroyInstance()
 	{
 		vkDestroyInstance(r_deviceContext.instance, nullptr);
-		clz::log::info("Destroyed vulkan instance");
+		clz::log::debug("Destroyed vulkan instance");
 	}
 
 	void destroySurface()
 	{
 		vkDestroySurfaceKHR(r_deviceContext.instance, r_deviceContext.surface, nullptr);
-		clz::log::info("Destroyed surface instance");
+		clz::log::debug("Destroyed surface instance");
 	}
 
 	void destroyDevice()
 	{
 		vkDestroyDevice(r_deviceContext.device, nullptr);
-		clz::log::info("Destroyed logical device");
+		clz::log::debug("Destroyed logical device");
 	}
 } // namespace clz::renderer

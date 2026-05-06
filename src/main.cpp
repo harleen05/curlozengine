@@ -30,7 +30,7 @@ int main()
 	clz::log::info("Welcome to " + clz::config::getAppName());
 	clz::config::printAppVersion();
 
-	// Start clock
+	// Start clock, Whole system uses it, so make sure to start it first
 	clz::time::init();
 
 	// Initialize Window. Should be the first subsystem to initialize
@@ -58,6 +58,7 @@ int main()
 	// Main loop. Runs until g_engineState is set to EngineState::Shutdown
 	while (clz::state::g_engineState == clz::state::EngineState::Running)
 	{
+		clz::time::computeTime();
 		clz::window::update();
 		clz::renderer::update(clz::time::getDeltaTime());
 	}
@@ -65,6 +66,7 @@ int main()
 
 	// Shut down
 	clz::audio::shutdown();
+	clz::ecs::shutdown();
 	clz::renderer::shutdown();
 	clz::window::shutdown();
 	clz::log::info("Exiting successfully");

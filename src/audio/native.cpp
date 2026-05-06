@@ -9,20 +9,20 @@ namespace clz::audio
 		rp_device = alcOpenDevice(nullptr);
 		if (!rp_device)
 		{
-			clz::log::info("Could not open audio device");
+			clz::log::error("Could not open audio device");
 			return std::unexpected("Could not open audio device");
 		}
 
 		rp_context = alcCreateContext(rp_device, nullptr);
 		if (!rp_context)
 		{
-			clz::log::info("Could not create audio context");
+			clz::log::error("Could not create audio context");
 			return std::unexpected("Could not create audio context");
 		}
 
 		if (!alcMakeContextCurrent(rp_context))
 		{
-			clz::log::info("Could not make context current");
+			clz::log::error("Could not make context current");
 			return std::unexpected("Could not make context current");
 		}
 		alListener3f(AL_POSITION, 0.0f, 0.0f, 0.0f);

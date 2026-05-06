@@ -24,6 +24,7 @@ namespace clz::window
 			clz::log::error(result.error());
 			return;
 		}
+		clz::log::info("Initialized window system");
 	}
 
 	void shutdown()

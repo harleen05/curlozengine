@@ -74,7 +74,7 @@ namespace clz::renderer
 					       std::string(fragmentShaderLocation));
 		}
 
-		clz::log::info("created shader modules: " + std::string(vertexShaderLocation) + " and " + std::string(fragmentShaderLocation));
+		clz::log::debug("created shader modules: " + std::string(vertexShaderLocation) + " and " + std::string(fragmentShaderLocation));
 		return {};
 	}
 
@@ -209,7 +209,7 @@ namespace clz::renderer
 			return std::unexpected("could not create pipeline");
 		}
 
-		clz::log::info("created main pipeline");
+		clz::log::debug("created main pipeline");
 
 		return {};
 	}
@@ -223,6 +223,6 @@ namespace clz::renderer
 		vkDestroyShaderModule(r_deviceContext.device, r_pipelineContext.fragmentShader,
 				      nullptr);
 
-		clz::log::info("destroyed main pipeline");
+		clz::log::debug("destroyed main pipeline");
 	}
 } // namespace clz::renderer
