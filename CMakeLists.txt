@@ -8,10 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 ## Sources
 file(GLOB_RECURSE SOURCES src/*.cpp)
-
-add_executable(${PROJECT_NAME} ${SOURCES}
-        include/math/vec4.hpp)
-
+add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 
 ## Find Packages Section
