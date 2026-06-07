@@ -10,14 +10,15 @@
  * as all other subsystems read from it.
  */
 
+#include "audio/audio.hpp"
 #include "config/config.hpp"
 #include "core/enginestate.hpp"
 #include "core/logs.hpp"
 #include "core/time.hpp"
-#include "scripting/scripting.hpp"
+#include "ecs/ecs.hpp"
 #include "renderer/renderer.hpp"
+#include "scripting/scripting.hpp"
 #include "window/window.hpp"
-#include "audio/audio.hpp"
 
 int main()
 {
@@ -29,17 +30,23 @@ int main()
 	clz::log::info("Welcome to " + clz::config::getAppName());
 	clz::config::printAppVersion();
 
-	// Start clock
+	// Start clock, Whole system uses it, so make sure to start it first
 	clz::time::init();
 
 	// Initialize Window. Should be the first subsystem to initialize
 	clz::window::init();
 	if (clz::log::errorOccurred()) [[unlikely]]
 		return 1;
-	clz::log::info("Window initialized");
 
 	// Initialize renderer
 	clz::renderer::init();
+	if (clz::log::errorOccurred()) [[unlikely]]
+		return 1;
+
+	// Initialize entities
+	clz::ecs::init();
+	if (clz::log::errorOccurred()) [[unlikely]]
+		return 1;
 
 	// Initialize audio
 	clz::audio::init();
@@ -51,13 +58,14 @@ int main()
 	// Main loop. Runs until g_engineState is set to EngineState::Shutdown
 	while (clz::state::g_engineState == clz::state::EngineState::Running)
 	{
+		clz::time::computeTime();
 		clz::window::update();
 		clz::renderer::update(clz::time::getDeltaTime());
 	}
 
-
 	// Shut down
 	clz::audio::shutdown();
+	clz::ecs::shutdown();
 	clz::renderer::shutdown();
 	clz::window::shutdown();
 	clz::log::info("Exiting successfully");

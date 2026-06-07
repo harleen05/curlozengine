@@ -1,5 +1,5 @@
 /**
-* @file luainterface.hpp
+ * @file luainterface.hpp
  * @author curl0z
  * @brief Defines all the interfaces such as functions and keyboard binds etc. to lua
  */

@@ -29,12 +29,12 @@ namespace clz::window
 	 * @brief Destroys the GLFW window and terminates GLFW.
 	 * @param pWindow pointer to the window handle to destroy.
 	 */
-	void shutdownGLFW(GLFWwindow **pWindow);
+	void shutdownGLFW(GLFWwindow** pWindow);
 
 	/**
 	 * @brief Polls GLFW events and checks for window close or escape key.
 	 * @param pWindow pointer to the active window.
 	 */
-	void pollEventsGLFW(GLFWwindow **pWindow);
+	void pollEventsGLFW(GLFWwindow** pWindow);
 
 } // namespace clz::window

@@ -36,6 +36,7 @@ namespace clz::renderer
 	struct DeviceContext
 	{
 		VkInstance instance = VK_NULL_HANDLE;	     ///< Vulkan instance
+		VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;	///< Debug messenger
 		VkPhysicalDevice gpu = VK_NULL_HANDLE;	     ///< Selected physical device
 		VkDevice device = VK_NULL_HANDLE;	     ///< Logical device
 		VkSurfaceKHR surface = VK_NULL_HANDLE;	     ///< Window surface
@@ -57,12 +58,12 @@ namespace clz::renderer
 	 */
 	struct SwapchainContext
 	{
-		VkSwapchainKHR swapchain = VK_NULL_HANDLE; ///< Swapchain handle
-		VkSurfaceFormatKHR format;		   ///< Selected surface format
+		VkSwapchainKHR swapchain = VK_NULL_HANDLE; 		 ///< Swapchain handle
+		VkSurfaceFormatKHR format;		   		 ///< Selected surface format
 		VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR; ///< Presentation mode
 		VkExtent2D extent = {};					 ///< Swapchain resolution
 		std::vector<VkImage> images = {};			 ///< Swapchain images
-		std::vector<VkImageView> imageViews = {}; ///< Image views for rendering
+		std::vector<VkImageView> imageViews = {};		 ///< Image views for rendering
 	};
 
 	/**

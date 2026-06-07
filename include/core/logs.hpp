@@ -46,6 +46,15 @@ namespace clz::log
 	}
 
 	/**
+	 * @brief Logs a debug message.
+	 * @param debug message
+	 */
+	inline void debug(std::string_view debug)
+	{
+		std::println("[DEBUG] {}", debug);
+	}
+
+	/**
 	 * @brief Logs an error message and sets hadError to true.
 	 * @param error The error
 	 */

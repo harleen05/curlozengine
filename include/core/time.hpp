@@ -12,11 +12,18 @@
 
 #pragma once
 
+#include "config/config.hpp"
 #include <chrono>
 #include <thread>
 
 namespace clz::time
 {
+	/// @brief Actual delta time
+	inline float t_deltaTime = 0.0f;
+
+	/// @brief Total elapsed time
+	inline double t_totalElapsedTime = 0.0;
+
 	/// @brief Timestamp of the current frame.
 	inline std::chrono::time_point<std::chrono::high_resolution_clock> t_timeTakenThisFrame;
 
@@ -57,25 +64,42 @@ namespace clz::time
 	 * If vsync is enabled and the frame finished faster than the target
 	 * delta, the function sleeps the remaining time to cap the frame rate.
 	 *
-	 * @return Delta time in seconds.
 	 */
-	inline float getDeltaTime()
+	inline void computeTime()
 	{
 		t_timeTakenThisFrame = std::chrono::high_resolution_clock::now();
-		float deltaTime =
+		t_deltaTime =
 		    std::chrono::duration<float>(t_timeTakenThisFrame - t_timeTakenLastFrame)
 			.count();
 		t_timeTakenLastFrame = t_timeTakenThisFrame;
 
+		t_totalElapsedTime += t_deltaTime;
+
 		// Software frame cap — sleep remaining time if frame finished early
-		if (t_VSync && deltaTime < t_targetDeltaTime)
+		if (t_VSync && t_deltaTime < t_targetDeltaTime)
 		{
 			std::this_thread::sleep_for(
-			    std::chrono::duration<float>(t_targetDeltaTime - deltaTime));
-			deltaTime = t_targetDeltaTime;
+			    std::chrono::duration<float>(t_targetDeltaTime - t_deltaTime));
+			t_deltaTime = t_targetDeltaTime;
 		}
+	}
 
-		return deltaTime;
+	/**
+	 * @brief Returns delta time
+	 * @return t_deltaTime in seconds
+	 */
+	inline float getDeltaTime()
+	{
+		return t_deltaTime;
+	}
+
+	/**
+	 * @brief Returns delta time
+	 * @return t_totalElapsedTime in seconds
+	 */
+	inline double getTotalElapsedTime()
+	{
+		return t_totalElapsedTime;
 	}
 
 } // namespace clz::time

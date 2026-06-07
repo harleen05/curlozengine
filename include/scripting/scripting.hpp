@@ -1,13 +1,13 @@
 /**
-* @file scripting.hpp
+ * @file scripting.hpp
  * @author curl0z
  * @brief Lua scripting subsystem.
  */
 
 #pragma once
 
-#include <string>
 #include <sol/sol.hpp>
+#include <string>
 
 namespace clz::script
 {
@@ -28,4 +28,4 @@ namespace clz::script
 	 */
 	void runScript(const std::string& path);
 
-} // namespace clz::scripting
+} // namespace clz::script

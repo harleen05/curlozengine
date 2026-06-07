@@ -74,15 +74,21 @@ namespace clz::renderer
 					       std::string(fragmentShaderLocation));
 		}
 
-		clz::log::info("created shader modules: " + std::string(vertexShaderLocation) + " and " + std::string(fragmentShaderLocation));
+		clz::log::debug("created shader modules: " + std::string(vertexShaderLocation) +
+				" and " + std::string(fragmentShaderLocation));
 		return {};
 	}
 
 	std::expected<void, std::string> createMainPipeline()
 	{
 		// Create shaders modules
-		createShaderModules(r_pipelineContext, "shaders/triangle.vert.spirv",
+		auto shaderModuleResult = createShaderModules(r_pipelineContext, "shaders/triangle.vert.spirv",
 				    "shaders/triangle.frag.spirv");
+		if (!shaderModuleResult) [[unlikely]]
+		{
+			clz::log::error(shaderModuleResult.error());
+			return std::unexpected(shaderModuleResult.error());
+		}
 		// Shader Create Info
 		VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
 		vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -142,15 +148,16 @@ namespace clz::renderer
 
 		VkPipelineRasterizationStateCreateInfo rasterizer{};
 		rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-		rasterizer.depthClampEnable = VK_FALSE;
+		// rasterizer.depthClampEnable = VK_FALSE;
 		rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-		rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-		rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
-		rasterizer.depthBiasEnable = VK_FALSE;
+		// rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+		// rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+		// rasterizer.depthBiasEnable = VK_FALSE;
 		rasterizer.lineWidth = 1.0f;
+
 		VkPipelineMultisampleStateCreateInfo multisampling{};
 		multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-		multisampling.sampleShadingEnable = VK_FALSE;
+		// multisampling.sampleShadingEnable = VK_FALSE;
 		multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
 		VkPipelineColorBlendAttachmentState colorBlendAttachment{};
@@ -209,7 +216,7 @@ namespace clz::renderer
 			return std::unexpected("could not create pipeline");
 		}
 
-		clz::log::info("created main pipeline");
+		clz::log::debug("created main pipeline");
 
 		return {};
 	}
@@ -223,6 +230,6 @@ namespace clz::renderer
 		vkDestroyShaderModule(r_deviceContext.device, r_pipelineContext.fragmentShader,
 				      nullptr);
 
-		clz::log::info("destroyed main pipeline");
+		clz::log::debug("destroyed main pipeline");
 	}
 } // namespace clz::renderer

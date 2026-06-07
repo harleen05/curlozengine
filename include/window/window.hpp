@@ -38,7 +38,7 @@ namespace clz::window
 	 * @warning not to be used outside window subsystem
 	 * @return pointer to GLFWwindow
 	 */
-	GLFWwindow *getWindowHandle();
+	GLFWwindow* getWindowHandle();
 
-	void getFramebufferExtents(int *width, int *height);
+	void getFramebufferExtents(int* width, int* height);
 } // namespace clz::window

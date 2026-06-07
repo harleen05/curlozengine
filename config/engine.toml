@@ -10,3 +10,6 @@ height = 1080
 vsync = false
 refreshrate = 120
 triplebuffering = true
+
+[entity]
+file = "config/entity.json"

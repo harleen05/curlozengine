@@ -1,4 +1,4 @@
-/*
+/**
  * @file swapchaincontext.hpp
  * author curl0z
  * @brief Contains functions for initializing and
@@ -11,14 +11,14 @@
 
 namespace clz::renderer
 {
-	/*
+	/**
 	 * @brief Creates swapchain, initializes all the
 	 * images and image views
 	 * and sets all the other swapchain settings
 	 */
 	std::expected<void, std::string> createSwapchain();
 
-	/*
+	/**
 	 * @brief Destroys the all the handles in
 	 * the swapchain context
 	 */

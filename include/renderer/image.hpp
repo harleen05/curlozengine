@@ -1,4 +1,4 @@
-/*
+/**
  * @file image.hpp
  * @authos curl0z
  * @brief Contains all the functions concerning images

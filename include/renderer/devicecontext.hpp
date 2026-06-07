@@ -1,4 +1,4 @@
-/*
+/**
  * @file devicecontext.hpp
  * @author curl0z
  * @brief Contains all the functions for
@@ -14,7 +14,7 @@
 
 namespace clz::renderer
 {
-	/*
+	/**
 	 * @brief Initializes instance
 	 * @return void if succeeded or logs the error
 	 * and returns the error message as string
@@ -22,7 +22,15 @@ namespace clz::renderer
 	 */
 	std::expected<void, std::string> createInstance();
 
-	/*
+	/**
+	 * @brief Creates debug messenger
+	 * @return void if succeeded or logs the error
+	 * and returns the error message as string
+	 * @note Must be the called after instance has been created
+	 */
+	std::expected<void, std::string> createDebugMessenger();
+
+	/**
 	 * @brief Creates window surface
 	 * @return void if succeeded or logs the error
 	 * and returns the error message as string
@@ -30,7 +38,7 @@ namespace clz::renderer
 	 */
 	std::expected<void, std::string> createSurface();
 
-	/*
+	/**
 	 * @brief Selects physical device ie GPU
 	 * based on whether it supports vulkan API 1.3
 	 * and has dynamic rendering support.
@@ -42,7 +50,7 @@ namespace clz::renderer
 	 */
 	std::expected<void, std::string> selectPhysicalDevice();
 
-	/*
+	/**
 	 * @brief Created logical device handle
 	 * @return void if succeeded or logs the error
 	 * and returns the error message as string
@@ -51,18 +59,24 @@ namespace clz::renderer
 	 */
 	std::expected<void, std::string> createLogicalDevice();
 
-	/*
+	/**
 	 * @brief Destroys the instance handle
 	 * @note must be last instance to be destroyed
 	 */
 	void destroyInstance();
 
-	/*
+	/**
+	  * @brief Destroys the debug messenger
+	  * @note must be called before destroying the instance
+	  */
+	void destroyDebugMessenger();
+
+	/**
 	 * @brief Destroys window surface
 	 */
 	void destroySurface();
 
-	/*
+	/**
 	 * @brief Destroys the logical device handle
 	 */
 	void destroyDevice();

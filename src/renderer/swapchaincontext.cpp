@@ -171,7 +171,7 @@ namespace clz::renderer
 			}
 		}
 
-		clz::log::info("renderer: created swapchain");
+		clz::log::debug("renderer: created swapchain");
 		return {};
 	}
 
@@ -184,6 +184,6 @@ namespace clz::renderer
 		vkDestroySwapchainKHR(r_deviceContext.device, r_swapchainContext.swapchain,
 				      nullptr);
 
-		clz::log::info("renderer: destroyed swapchain context");
+		clz::log::debug("renderer: destroyed swapchain context");
 	}
 } // namespace clz::renderer

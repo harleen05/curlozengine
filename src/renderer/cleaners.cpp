@@ -18,27 +18,28 @@ namespace clz::renderer
 	{
 		destroyDevice();
 		destroySurface();
+		destroyDebugMessenger();
 		destroyInstance();
 
-		clz::log::info("Destroyed Device Context Successfully");
+		clz::log::debug("Destroyed Device Context Successfully");
 	}
 
 	void destroySwapchainContext()
 	{
 		destroySwapchain();
-		clz::log::info("Destroyed Swapchain Context Successfully");
+		clz::log::debug("Destroyed Swapchain Context Successfully");
 	}
 
 	void destroyPipelineContext()
 	{
 		destroyMainPipeline();
-		clz::log::info("Destroyed pipeline Context Successfully");
+		clz::log::debug("Destroyed pipeline Context Successfully");
 	}
 
 	void destroyFrameContext()
 	{
 		destroyCommandPool();
 		destroySyncObjects();
-		clz::log::info("Destroyed frame Context Successfully");
+		clz::log::debug("Destroyed frame Context Successfully");
 	}
 } // namespace clz::renderer

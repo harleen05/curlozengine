@@ -24,6 +24,7 @@ namespace clz::window
 			clz::log::error(result.error());
 			return;
 		}
+		clz::log::info("Initialized window system");
 	}
 
 	void shutdown()
@@ -36,12 +37,12 @@ namespace clz::window
 		pollEventsGLFW(&w_window);
 	}
 
-	GLFWwindow *getWindowHandle()
+	GLFWwindow* getWindowHandle()
 	{
 		return w_window;
 	}
 
-	void getFramebufferExtents(int *width, int *height)
+	void getFramebufferExtents(int* width, int* height)
 	{
 		glfwGetFramebufferSize(w_window, width, height);
 	}
