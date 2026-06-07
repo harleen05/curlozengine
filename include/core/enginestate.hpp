@@ -38,4 +38,5 @@ namespace clz::state
 				       std::string(callerLocation));
 		}
 	}
+
 } // namespace clz::state

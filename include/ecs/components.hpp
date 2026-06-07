@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "math/math.hpp"
+#include "math/vec3.hpp"
 
 namespace clz::ecs
 {

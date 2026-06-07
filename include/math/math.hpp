@@ -1,4 +1,3 @@
-// math/math.hpp
 #pragma once
 
 #include <glm/glm.hpp>
@@ -35,3 +34,4 @@ namespace clz::math
 	using glm::value_ptr;
 
 } // namespace clz::math
+*/

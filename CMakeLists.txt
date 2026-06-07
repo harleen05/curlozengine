@@ -5,21 +5,34 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Sources
+
+## Sources
 file(GLOB_RECURSE SOURCES src/*.cpp)
 
-add_executable(${PROJECT_NAME} ${SOURCES})
+add_executable(${PROJECT_NAME} ${SOURCES}
+        include/math/vec4.hpp)
 
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 
-# Vulkan
+## Find Packages Section
 find_package(Vulkan REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE Vulkan::Vulkan)
 
-# Always use static libs
+## Compile options
+
+# Compile Profile
+target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>: CLZ_DEBUG >)
+
+#SSE 4.1 instruction sets
+target_compile_options(${PROJECT_NAME} PRIVATE -msse4.1)
+
+
+## Always use static libs
 set(BUILD_SHARED_LIBS OFF)
 
-# External Libs, This should be the last section, everything below this is just linking third party libraries
+## External Libs, This should be the last section, everything below this is just linking third party libraries
+
+#Vulkan
+target_link_libraries(${PROJECT_NAME} PRIVATE Vulkan::Vulkan)
 
 #GLFW
 add_subdirectory(external/glfw)
