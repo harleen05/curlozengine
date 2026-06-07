@@ -1,12 +1,12 @@
 /**
-* @file ecs.cpp
+ * @file ecs.cpp
  * @author curl0z
  * @brief ECS subsystem implementation.
  */
 
 #include "ecs/ecs.hpp"
-#include "ecs/scene.hpp"
 #include "core/logs.hpp"
+#include "ecs/scene.hpp"
 #include "ecs/variables.hpp"
 
 namespace clz::ecs

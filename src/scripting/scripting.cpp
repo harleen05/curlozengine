@@ -16,12 +16,8 @@ namespace clz::script
 	void init()
 	{
 		// load standard Lua libraries
-		sc_lua.open_libraries(
-			sol::lib::base,
-			sol::lib::math,
-			sol::lib::string,
-			sol::lib::table
-		);
+		sc_lua.open_libraries(sol::lib::base, sol::lib::math, sol::lib::string,
+				      sol::lib::table);
 
 		registerLuaInterface(sc_lua);
 
@@ -47,4 +43,4 @@ namespace clz::script
 		}
 	}
 
-} // namespace clz::scripting
+} // namespace clz::script

@@ -10,15 +10,15 @@
  * as all other subsystems read from it.
  */
 
+#include "audio/audio.hpp"
 #include "config/config.hpp"
 #include "core/enginestate.hpp"
 #include "core/logs.hpp"
 #include "core/time.hpp"
-#include "scripting/scripting.hpp"
-#include "renderer/renderer.hpp"
-#include "window/window.hpp"
-#include "audio/audio.hpp"
 #include "ecs/ecs.hpp"
+#include "renderer/renderer.hpp"
+#include "scripting/scripting.hpp"
+#include "window/window.hpp"
 
 int main()
 {
@@ -62,7 +62,6 @@ int main()
 		clz::window::update();
 		clz::renderer::update(clz::time::getDeltaTime());
 	}
-
 
 	// Shut down
 	clz::audio::shutdown();

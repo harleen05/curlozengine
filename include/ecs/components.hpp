@@ -1,5 +1,5 @@
 /**
-* @file components.hpp
+ * @file components.hpp
  * @author curl0z
  * @brief ECS component definitions for Curloz Engine.
  *
@@ -24,9 +24,9 @@ namespace clz::ecs
 	 */
 	struct TransformComponent
 	{
-		clz::math::vec3 position = {0, 0, 0}; ///< World space position.
-		clz::math::vec3 rotation = {0, 0, 0}; ///< Euler angles in degrees (pitch, yaw, roll).
-		clz::math::vec3 scale    = {1, 1, 1}; ///< Non-uniform scale.
+		clz::math::vec3 position = {0, 0, 0};	///< World space position.
+		clz::math::vec3 rotation = {0, 0, 0};	///< Euler angles in degrees (pitch, yaw, roll).
+		clz::math::vec3 scale	 = {1, 1, 1};	///< Non-uniform scale.
 	};
 
 } // namespace clz::ecs

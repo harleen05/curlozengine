@@ -52,7 +52,7 @@ namespace clz::renderer
 		}
 	}
 
-	void startCommandBuffer(const VkCommandBuffer commandBuffer)
+	void startCommandBuffer(VkCommandBuffer commandBuffer)
 	{
 		if (vkResetCommandBuffer(commandBuffer, 0) != VK_SUCCESS) [[unlikely]]
 		{
@@ -62,11 +62,11 @@ namespace clz::renderer
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) [[unlikely]]
 		{
-			clz::log::error("midloop: Failed to begin command buffer");
+			clz::log::error("renderer: midloop: Failed to begin command buffer");
 		}
 	}
 
-	void recordCommandBuffer(const VkCommandBuffer commandBuffer, const uint32_t imageIndex)
+	void recordCommandBuffer(VkCommandBuffer commandBuffer, const uint32_t imageIndex)
 	{
 		transition_image_layout(
 		    r_swapchainContext.images[imageIndex], VK_IMAGE_LAYOUT_UNDEFINED,
@@ -81,13 +81,15 @@ namespace clz::renderer
 		    .imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 		    .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
 		    .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-		    .clearValue = {{0.0f, 0.0f, 0.0f, 1.0f}}};
+		    .clearValue = {{0.0f, 0.0f, 0.0f, 1.0f}}
+		};
 		const VkRenderingInfoKHR renderingInfo{
 		    .sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR,
 		    .renderArea = {{0, 0}, r_swapchainContext.extent},
 		    .layerCount = 1,
 		    .colorAttachmentCount = 1,
-		    .pColorAttachments = &colorAttachment};
+		    .pColorAttachments = &colorAttachment
+		};
 		vkCmdBeginRendering(commandBuffer, &renderingInfo);
 
 		const VkViewport viewport{
@@ -121,10 +123,10 @@ namespace clz::renderer
 		}
 	}
 
-	void submitCommandBuffer(const VkCommandBuffer commandBuffer,
-				 const VkSemaphore imageAvailableSemaphore,
-				 const VkSemaphore renderFinishedSemaphore,
-				 const VkFence inFlightFence)
+	void submitCommandBuffer(VkCommandBuffer commandBuffer,
+				 VkSemaphore imageAvailableSemaphore,
+				 VkSemaphore renderFinishedSemaphore,
+				 VkFence inFlightFence)
 	{
 		const VkSemaphoreSubmitInfoKHR waitSemaphore{
 		    .sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO_KHR,
@@ -157,15 +159,16 @@ namespace clz::renderer
 
 	void present(VkSemaphore semaphore, uint32_t imageIndex)
 	{
-		const VkPresentInfoKHR presentInfo{.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
-						   .waitSemaphoreCount = 1,
-						   .pWaitSemaphores = &semaphore,
-						   .swapchainCount = 1,
-						   .pSwapchains = &r_swapchainContext.swapchain,
-						   .pImageIndices = &imageIndex};
+		const VkPresentInfoKHR presentInfo{
+			.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+			.waitSemaphoreCount = 1,
+			.pWaitSemaphores = &semaphore,
+			.swapchainCount = 1,
+			.pSwapchains = &r_swapchainContext.swapchain,
+			.pImageIndices = &imageIndex
+		};
 
-		if (vkQueuePresentKHR(r_deviceContext.presentQueue, &presentInfo) != VK_SUCCESS)
-		    [[unlikely]]
+		if (vkQueuePresentKHR(r_deviceContext.presentQueue, &presentInfo) != VK_SUCCESS) [[unlikely]]
 		{
 			clz::log::error("renderer/mainloop: vkQueuePresent failed");
 		}

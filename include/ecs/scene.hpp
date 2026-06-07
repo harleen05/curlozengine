@@ -1,5 +1,5 @@
 /**
-* @file scene.hpp
+ * @file scene.hpp
  * @author curl0z
  * @brief Scene loading — parses entity JSON and populates the ECS registry.
  *

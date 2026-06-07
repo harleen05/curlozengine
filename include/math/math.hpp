@@ -21,17 +21,17 @@ namespace clz::math
 	using quat = glm::quat;
 
 	// Common functions — just forwarding to GLM
-	using glm::radians;
-	using glm::degrees;
-	using glm::normalize;
 	using glm::cross;
+	using glm::degrees;
 	using glm::dot;
 	using glm::length;
-	using glm::translate;
+	using glm::lookAt;
+	using glm::normalize;
+	using glm::perspective;
+	using glm::radians;
 	using glm::rotate;
 	using glm::scale;
-	using glm::perspective;
-	using glm::lookAt;
+	using glm::translate;
 	using glm::value_ptr;
 
 } // namespace clz::math

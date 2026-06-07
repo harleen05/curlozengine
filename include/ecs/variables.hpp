@@ -1,5 +1,5 @@
 /**
-* @file variables.hpp
+ * @file variables.hpp
  * @author curl0z
  * @brief Global ECS registry instance.
  *

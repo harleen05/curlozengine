@@ -17,4 +17,4 @@ namespace clz::window
 	{
 		return glfwGetKey(getWindowHandle(), static_cast<int>(key)) == GLFW_RELEASE;
 	}
-}
+} // namespace clz::window

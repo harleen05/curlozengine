@@ -12,9 +12,9 @@
 
 #pragma once
 
+#include "config/config.hpp"
 #include <chrono>
 #include <thread>
-#include "config/config.hpp"
 
 namespace clz::time
 {
@@ -101,6 +101,5 @@ namespace clz::time
 	{
 		return t_totalElapsedTime;
 	}
-
 
 } // namespace clz::time

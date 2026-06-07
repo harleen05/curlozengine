@@ -1,23 +1,24 @@
 #include "audio/audio.hpp"
+#include "audio/au_types.hpp"
 #include "audio/native.hpp"
 #include "core/logs.hpp"
-
 #include <AL/alc.h>
 
 namespace clz::audio
 {
-	static ALCdevice  *au_device = nullptr;
-	static ALCcontext *au_ctx    = nullptr;
-
 	void init()
 	{
-		initializeOpenAL(au_device, au_ctx);
+		auto result = initializeOpenAL(au_device, au_context);
+		if (!result)
+		{
+			clz::log::error(result.error());
+		}
 		clz::log::info("Initialized audio");
 	}
 
 	void shutdown()
 	{
-		closeOpenAL(au_device, au_ctx);
+		closeOpenAL(au_device, au_context);
 		clz::log::info("Shut down audio");
 	}
-}
+} // namespace clz::audio

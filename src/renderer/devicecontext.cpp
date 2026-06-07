@@ -17,18 +17,22 @@
 namespace clz::renderer
 {
 #ifdef NDEBUG
-	inline bool enableValidationLayers = false;
+	constexpr bool enableValidationLayers = false;
 #else
-	inline bool enableValidationLayers = true;
+	constexpr bool enableValidationLayers = true;
 #endif
 
-	std::expected<void, std::string>
-	getRequiredInstanceExtensions(std::vector<const char*>& rRequiredExtensions)
+	std::expected<void, std::string> getRequiredInstanceExtensions(std::vector<const char*>& rRequiredExtensions)
 	{
 		auto result = clz::window::getRequiredVulkanExtensions(rRequiredExtensions);
 		if (!result)
 		{
 			return std::unexpected(result.error());
+		}
+
+		if (enableValidationLayers)
+		{
+			rRequiredExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 		}
 
 		uint32_t count = 0;
@@ -52,8 +56,8 @@ namespace clz::renderer
 		clz::log::debug("All required instance extensions present");
 		return {};
 	}
-	std::expected<void, std::string>
-	getValidationLayers(std::vector<const char*>& rValidationLayers)
+
+	std::expected<void, std::string> getValidationLayers(std::vector<const char*>& rValidationLayers)
 	{
 		rValidationLayers = {"VK_LAYER_KHRONOS_validation"};
 
@@ -144,6 +148,55 @@ namespace clz::renderer
 		}
 
 		clz::log::debug("renderer: created instance");
+		return {};
+	}
+
+	VKAPI_ATTR VkBool32 VKAPI_CALL printMessage(
+		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+		VkDebugUtilsMessageTypeFlagsEXT messageType,
+		const VkDebugUtilsMessengerCallbackDataEXT* pMessageData,
+		void* pUserData)
+	{
+		switch (messageSeverity)
+		{
+			case(VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT):
+				clz::log::info("renderer: " + std::string(pMessageData->pMessage));
+				break;
+			case(VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT):
+				clz::log::warn("renderer: " + std::string(pMessageData->pMessage));
+				break;
+			case(VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT):
+				clz::log::error("renderer: " + std::string(pMessageData->pMessage));
+				break;
+			default:
+				break;
+		}
+		return VK_FALSE;
+	}
+
+	std::expected<void, std::string> createDebugMessenger()
+	{
+		VkDebugUtilsMessengerCreateInfoEXT messengerInfo{};
+		messengerInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+		messengerInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+		messengerInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+		messengerInfo.pfnUserCallback = printMessage;
+		messengerInfo.pUserData = nullptr; // Optional
+
+		const auto createMessenger = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT> (vkGetInstanceProcAddr(r_deviceContext.instance, "vkCreateDebugUtilsMessengerEXT"));
+		if (createMessenger == nullptr)
+		{
+			clz::log::error("renderer: Could not find the debug messenger creator function");
+			return std::unexpected("Could not find the debug messenger creator function");
+		}
+
+		if (createMessenger(r_deviceContext.instance, &messengerInfo, nullptr, &r_deviceContext.debugMessenger) != VK_SUCCESS)
+		{
+			clz::log::error("renderer: Could not create debug messenger");
+			return std::unexpected("could not create debug messenger");
+		}
+		clz::log::debug("renderer: Created Debug Messenger");
+
 		return {};
 	}
 
@@ -371,6 +424,16 @@ namespace clz::renderer
 	{
 		vkDestroyInstance(r_deviceContext.instance, nullptr);
 		clz::log::debug("Destroyed vulkan instance");
+	}
+
+	void destroyDebugMessenger()
+	{
+		auto destroyMessenger = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(r_deviceContext.instance, "vkDestroyDebugUtilsMessengerEXT"));
+		if (destroyMessenger != nullptr)
+		{
+			destroyMessenger(r_deviceContext.instance, r_deviceContext.debugMessenger, nullptr);
+		}
+		clz::log::debug("Destroyed debug messenger");
 	}
 
 	void destroySurface()

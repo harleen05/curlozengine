@@ -1,5 +1,5 @@
 /**
-* @file ecs.hpp
+ * @file ecs.hpp
  * @author curl0z
  * @brief Public interface for the ECS subsystem.
  *

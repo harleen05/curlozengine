@@ -19,6 +19,10 @@ namespace clz::renderer
 		if (!instanceResult)
 			return std::unexpected(instanceResult.error());
 
+		auto debugMessengerResult = createDebugMessenger();
+		if (!debugMessengerResult)
+			return std::unexpected(debugMessengerResult.error());
+
 		auto surfacerResult = createSurface();
 		if (!surfacerResult)
 			return std::unexpected(surfacerResult.error());
@@ -41,7 +45,6 @@ namespace clz::renderer
 		auto result = createSwapchain();
 		if (!result)
 			return std::unexpected(result.error());
-
 
 		clz::log::info("initialized swapchain context successfully");
 		return {};
@@ -71,7 +74,6 @@ namespace clz::renderer
 		auto syncObjectResult = createSyncObjects();
 		if (!syncObjectResult)
 			return std::unexpected(syncObjectResult.error());
-
 
 		clz::log::info("initialized frame context successfully");
 		return {};

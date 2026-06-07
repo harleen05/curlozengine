@@ -18,6 +18,7 @@ namespace clz::renderer
 	{
 		destroyDevice();
 		destroySurface();
+		destroyDebugMessenger();
 		destroyInstance();
 
 		clz::log::debug("Destroyed Device Context Successfully");

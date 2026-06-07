@@ -1,5 +1,5 @@
 /**
-* @file scene.cpp
+ * @file scene.cpp
  * @author curl0z
  * @brief Scene loading implementation.
  *
@@ -12,8 +12,8 @@
 #include "core/logs.hpp"
 #include "ecs/components.hpp"
 #include "ecs/variables.hpp"
-#include <nlohmann/json.hpp>
 #include <fstream>
+#include <nlohmann/json.hpp>
 
 namespace clz::ecs
 {
@@ -29,7 +29,8 @@ namespace clz::ecs
 		// Parse JSON
 		std::ifstream file(entityFile);
 		if (!file.is_open())
-			return std::unexpected("Could not open entity file: " + std::string(entityFile));
+			return std::unexpected("Could not open entity file: " +
+					       std::string(entityFile));
 
 		auto json = nlohmann::json::parse(file);
 
@@ -42,11 +43,13 @@ namespace clz::ecs
 			if (entityData["components"].contains("transform"))
 			{
 				auto& t = entityData["components"]["transform"];
-				ecs_registry.emplace<TransformComponent>(entity,
-					clz::math::vec3(t["position"][0], t["position"][1], t["position"][2]),
-					clz::math::vec3(t["rotation"][0], t["rotation"][1], t["rotation"][2]),
-					clz::math::vec3(t["scale"][0],    t["scale"][1],    t["scale"][2])
-				);
+				ecs_registry.emplace<TransformComponent>(
+				    entity,
+				    clz::math::vec3(t["position"][0], t["position"][1],
+						    t["position"][2]),
+				    clz::math::vec3(t["rotation"][0], t["rotation"][1],
+						    t["rotation"][2]),
+				    clz::math::vec3(t["scale"][0], t["scale"][1], t["scale"][2]));
 			}
 		}
 
@@ -55,10 +58,9 @@ namespace clz::ecs
 		for (const auto entity : view)
 		{
 			const auto pos = view.get<TransformComponent>(entity).position;
-			clz::log::debug("Entity loaded at position: " +
-				std::to_string(pos.x) + ", " +
-				std::to_string(pos.y) + ", " +
-				std::to_string(pos.z));
+			clz::log::debug("Entity loaded at position: " + std::to_string(pos.x) +
+					", " + std::to_string(pos.y) + ", " +
+					std::to_string(pos.z));
 		}
 
 		return {};
