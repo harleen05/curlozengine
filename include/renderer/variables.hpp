@@ -59,5 +59,5 @@ namespace clz::renderer
 	/**
 	 * @brief Number of frames processed concurrently.
 	 */
-	constexpr uint8_t FRAMES_IN_FLIGHT = 2;
+	constexpr uint8_t FRAMES_IN_FLIGHT = 3;
 } // namespace clz::renderer

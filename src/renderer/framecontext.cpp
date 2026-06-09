@@ -96,14 +96,14 @@ namespace clz::renderer
 			}
 		}
 
-		clz::log::info("created All semaphores and fences");
+		clz::log::debug("created All semaphores and fences");
 		return {};
 	}
 
 	void destroyCommandPool()
 	{
 		vkDestroyCommandPool(r_deviceContext.device, r_frameContext.commandPool, nullptr);
-		clz::log::info("destroyed command pool");
+		clz::log::debug("destroyed command pool");
 	}
 
 	void destroySyncObjects()
@@ -125,7 +125,7 @@ namespace clz::renderer
 					   nullptr);
 		}
 
-		clz::log::info("destroyed semaphores and fences");
+		clz::log::debug("destroyed semaphores and fences");
 	}
 
 } // namespace clz::renderer

@@ -46,7 +46,7 @@ namespace clz::renderer
 		if (!result)
 			return std::unexpected(result.error());
 
-		clz::log::info("initialized swapchain context successfully");
+		clz::log::debug("initialized swapchain context successfully");
 		return {};
 	}
 
@@ -56,7 +56,7 @@ namespace clz::renderer
 		if (!result)
 			return std::unexpected(result.error());
 
-		clz::log::info("initialized pipeline context successfully");
+		clz::log::debug("initialized pipeline context successfully");
 
 		return {};
 	}
@@ -75,7 +75,7 @@ namespace clz::renderer
 		if (!syncObjectResult)
 			return std::unexpected(syncObjectResult.error());
 
-		clz::log::info("initialized frame context successfully");
+		clz::log::debug("initialized frame context successfully");
 		return {};
 	}
 } // namespace clz::renderer

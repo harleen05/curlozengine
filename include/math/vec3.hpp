@@ -24,16 +24,18 @@ namespace clz::math
 	 */
 	struct alignas(16) vec3
 	{
-		union
-		{
+		union {
 			__m128 xmm;
-			struct {
+			struct
+			{
 				float x, y, z, _pad;
 			};
 		};
 
 		/// @brief Initializes all components to zero.
-		vec3() : xmm(_mm_setzero_ps()) {}
+		vec3() : xmm(_mm_setzero_ps())
+		{
+		}
 
 		/**
 		 * @brief Constructs a vec3 from three float values.
@@ -41,14 +43,17 @@ namespace clz::math
 		 * @param y Y component.
 		 * @param z Z component.
 		 */
-		vec3(const float x, const float y, const float z)
-		    : xmm(_mm_set_ps(0, z, y, x)) {}
+		vec3(const float x, const float y, const float z) : xmm(_mm_set_ps(0, z, y, x))
+		{
+		}
 
 		/**
 		 * @brief Constructs a vec3 directly from a __m128 register.
 		 * @param xmm Source SSE register.
 		 */
-		vec3(const __m128 xmm) : xmm(xmm) {}
+		vec3(const __m128 xmm) : xmm(xmm)
+		{
+		}
 	};
 
 	/**

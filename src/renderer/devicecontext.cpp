@@ -22,7 +22,8 @@ namespace clz::renderer
 	constexpr bool enableValidationLayers = true;
 #endif
 
-	std::expected<void, std::string> getRequiredInstanceExtensions(std::vector<const char*>& rRequiredExtensions)
+	std::expected<void, std::string>
+	getRequiredInstanceExtensions(std::vector<const char*>& rRequiredExtensions)
 	{
 		auto result = clz::window::getRequiredVulkanExtensions(rRequiredExtensions);
 		if (!result)
@@ -57,7 +58,8 @@ namespace clz::renderer
 		return {};
 	}
 
-	std::expected<void, std::string> getValidationLayers(std::vector<const char*>& rValidationLayers)
+	std::expected<void, std::string>
+	getValidationLayers(std::vector<const char*>& rValidationLayers)
 	{
 		rValidationLayers = {"VK_LAYER_KHRONOS_validation"};
 
@@ -151,25 +153,27 @@ namespace clz::renderer
 		return {};
 	}
 
-	VKAPI_ATTR VkBool32 VKAPI_CALL printMessage(
-		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-		VkDebugUtilsMessageTypeFlagsEXT messageType,
-		const VkDebugUtilsMessengerCallbackDataEXT* pMessageData,
-		void* pUserData)
+	VKAPI_ATTR VkBool32 VKAPI_CALL
+	printMessage(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+		     VkDebugUtilsMessageTypeFlagsEXT messageType,
+		     const VkDebugUtilsMessengerCallbackDataEXT* pMessageData, void* pUserData)
 	{
 		switch (messageSeverity)
 		{
-			case(VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT):
-				clz::log::info("renderer: " + std::string(pMessageData->pMessage));
-				break;
-			case(VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT):
-				clz::log::warn("renderer: " + std::string(pMessageData->pMessage));
-				break;
-			case(VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT):
-				clz::log::error("renderer: " + std::string(pMessageData->pMessage));
-				break;
-			default:
-				break;
+		case (VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT):
+			clz::log::info("VULKAN VALIDATION LAYERS: " +
+				       std::string(pMessageData->pMessage));
+			break;
+		case (VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT):
+			clz::log::warn("VULKAN VALIDATION LAYERS: " +
+				       std::string(pMessageData->pMessage));
+			break;
+		case (VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT):
+			clz::log::error("VULKAN VALIDATION LAYERS: " +
+					std::string(pMessageData->pMessage));
+			break;
+		default:
+			break;
 		}
 		return VK_FALSE;
 	}
@@ -178,19 +182,28 @@ namespace clz::renderer
 	{
 		VkDebugUtilsMessengerCreateInfoEXT messengerInfo{};
 		messengerInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-		messengerInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-		messengerInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+		messengerInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
+						VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+						VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+		messengerInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+					    VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+					    VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 		messengerInfo.pfnUserCallback = printMessage;
 		messengerInfo.pUserData = nullptr; // Optional
 
-		const auto createMessenger = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT> (vkGetInstanceProcAddr(r_deviceContext.instance, "vkCreateDebugUtilsMessengerEXT"));
+		const auto createMessenger =
+		    reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(
+			r_deviceContext.instance, "vkCreateDebugUtilsMessengerEXT"));
 		if (createMessenger == nullptr)
 		{
-			clz::log::error("renderer: Could not find the debug messenger creator function");
-			return std::unexpected("Could not find the debug messenger creator function");
+			clz::log::error(
+			    "renderer: Could not find the debug messenger creator function");
+			return std::unexpected(
+			    "Could not find the debug messenger creator function");
 		}
 
-		if (createMessenger(r_deviceContext.instance, &messengerInfo, nullptr, &r_deviceContext.debugMessenger) != VK_SUCCESS)
+		if (createMessenger(r_deviceContext.instance, &messengerInfo, nullptr,
+				    &r_deviceContext.debugMessenger) != VK_SUCCESS)
 		{
 			clz::log::error("renderer: Could not create debug messenger");
 			return std::unexpected("could not create debug messenger");
@@ -428,10 +441,13 @@ namespace clz::renderer
 
 	void destroyDebugMessenger()
 	{
-		auto destroyMessenger = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(r_deviceContext.instance, "vkDestroyDebugUtilsMessengerEXT"));
+		auto destroyMessenger =
+		    reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(
+			r_deviceContext.instance, "vkDestroyDebugUtilsMessengerEXT"));
 		if (destroyMessenger != nullptr)
 		{
-			destroyMessenger(r_deviceContext.instance, r_deviceContext.debugMessenger, nullptr);
+			destroyMessenger(r_deviceContext.instance, r_deviceContext.debugMessenger,
+					 nullptr);
 		}
 		clz::log::debug("Destroyed debug messenger");
 	}

@@ -16,10 +16,10 @@
 #include "core/logs.hpp"
 #include "core/time.hpp"
 #include "ecs/ecs.hpp"
+#include "math/vec3.hpp"
 #include "renderer/renderer.hpp"
 #include "scripting/scripting.hpp"
 #include "window/window.hpp"
-#include "math/vec3.hpp"
 
 int main()
 {
@@ -56,10 +56,10 @@ int main()
 	clz::script::init();
 	clz::script::runScript("assets/scripts/test.lua");
 
-
 	clz::math::vec3 a;
 	a = clz::math::vec3{3, 4, 0};
-	clz::log::debug("Value of a's length: " + std::to_string(getLength(clz::math::normalize(a))));
+	clz::log::debug("Value of a's length: " +
+			std::to_string(getLength(clz::math::normalize(a))));
 
 	// Main loop. Runs until g_engineState is set to EngineState::Shutdown
 	while (clz::state::g_engineState == clz::state::EngineState::Running)

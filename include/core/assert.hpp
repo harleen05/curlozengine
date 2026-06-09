@@ -1,15 +1,15 @@
 #pragma once
 
+#include <cassert>
 #include <source_location>
 #include <string>
-#include <cassert>
 
 namespace clz
 {
 	inline void clz_assert(bool condition, std::string_view msg,
-				std::source_location location = std::source_location::current())
+			       std::source_location location = std::source_location::current())
 	{
-		#ifdef CLZ_DEBUG
+#ifdef CLZ_DEBUG
 
 		if (!condition)
 		{
@@ -17,6 +17,6 @@ namespace clz
 			assert(false);
 		}
 
-		#endif
+#endif
 	}
-}
+} // namespace clz

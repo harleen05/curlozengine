@@ -24,30 +24,35 @@ namespace clz::math
 	 */
 	struct alignas(16) vec2
 	{
-		union
-		{
+		union {
 			__m128 xmm;
-			struct {
+			struct
+			{
 				float x, y, _pad1, _pad2;
 			};
 		};
 
 		/// @brief Initializes all components to zero.
-		vec2() : xmm(_mm_setzero_ps()) {}
+		vec2() : xmm(_mm_setzero_ps())
+		{
+		}
 
 		/**
 		 * @brief Constructs a vec2 from two float values.
 		 * @param x X component.
 		 * @param y Y component.
 		 */
-		vec2(const float x, const float y)
-		    : xmm(_mm_set_ps(0, 0, y, x)) {}
+		vec2(const float x, const float y) : xmm(_mm_set_ps(0, 0, y, x))
+		{
+		}
 
 		/**
 		 * @brief Constructs a vec2 directly from a __m128 register.
 		 * @param xmm Source SSE register.
 		 */
-		vec2(const __m128 xmm) : xmm(xmm) {}
+		vec2(const __m128 xmm) : xmm(xmm)
+		{
+		}
 	};
 
 	/**

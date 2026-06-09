@@ -10,20 +10,20 @@
 #pragma once
 
 #include <print>
-#include <string_view>
 #include <source_location>
+#include <string_view>
 
 namespace clz::log
 {
 	/// @brief ANSI color codes for terminal output.
 	namespace color
 	{
-		constexpr const char* reset  = "\033[0m";
-		constexpr const char* red    = "\033[31m";
+		constexpr const char* reset = "\033[0m";
+		constexpr const char* red = "\033[31m";
 		constexpr const char* yellow = "\033[33m";
-		constexpr const char* blue   = "\033[34m";
-		constexpr const char* green  = "\033[32m";
-	}
+		constexpr const char* blue = "\033[34m";
+		constexpr const char* green = "\033[32m";
+	} // namespace color
 
 	/// @brief Set to true when error() is called. Never resets automatically.
 	inline bool hadError = false;
@@ -34,9 +34,9 @@ namespace clz::log
 	 * @param loc location of caller
 	 */
 	inline void info(std::string_view info,
-				std::source_location loc = std::source_location::current())
+			 std::source_location loc = std::source_location::current())
 	{
-		std::println("{}[INFO]{} {}", color::green, color::reset,info);
+		std::println("{}[INFO]{} {}", color::green, color::reset, info);
 	}
 
 	/**
@@ -44,10 +44,10 @@ namespace clz::log
 	 * @param warn Warning.
 	 */
 	inline void warn(std::string_view warn,
-				std::source_location loc = std::source_location::current())
+			 std::source_location loc = std::source_location::current())
 	{
 		std::println("{}[WARN]{} {}:Line {}: {}", color::yellow, color::reset,
-				loc.function_name(), loc.line() , warn);
+			     loc.function_name(), loc.line(), warn);
 	}
 
 	/**
@@ -55,10 +55,10 @@ namespace clz::log
 	 * @param debug message
 	 */
 	inline void debug(std::string_view debug,
-				std::source_location loc = std::source_location::current())
+			  std::source_location loc = std::source_location::current())
 	{
 		std::println("{}[DEBUG]{} {}:Line {}: {}", color::blue, color::reset,
-				loc.function_name(), loc.line() , debug);
+			     loc.function_name(), loc.line(), debug);
 	}
 
 	/**
@@ -66,11 +66,11 @@ namespace clz::log
 	 * @param error The error
 	 */
 	inline void error(std::string_view error,
-				std::source_location loc = std::source_location::current())
+			  std::source_location loc = std::source_location::current())
 	{
 		hadError = true;
-		std::println("{}[DEBUG]{} {}:{}:Line {}: {}", color::blue, color::reset,
-				loc.file_name(), loc.function_name(), loc.line() , error);
+		std::println("{}[ERROR]{} {}:{}:Line {}: {}", color::red, color::reset,
+			     loc.file_name(), loc.function_name(), loc.line(), error);
 	}
 
 	/**

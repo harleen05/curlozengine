@@ -81,15 +81,13 @@ namespace clz::renderer
 		    .imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 		    .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
 		    .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-		    .clearValue = {{0.0f, 0.0f, 0.0f, 1.0f}}
-		};
+		    .clearValue = {{0.0f, 0.0f, 0.0f, 1.0f}}};
 		const VkRenderingInfoKHR renderingInfo{
 		    .sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR,
 		    .renderArea = {{0, 0}, r_swapchainContext.extent},
 		    .layerCount = 1,
 		    .colorAttachmentCount = 1,
-		    .pColorAttachments = &colorAttachment
-		};
+		    .pColorAttachments = &colorAttachment};
 		vkCmdBeginRendering(commandBuffer, &renderingInfo);
 
 		const VkViewport viewport{
@@ -123,10 +121,8 @@ namespace clz::renderer
 		}
 	}
 
-	void submitCommandBuffer(VkCommandBuffer commandBuffer,
-				 VkSemaphore imageAvailableSemaphore,
-				 VkSemaphore renderFinishedSemaphore,
-				 VkFence inFlightFence)
+	void submitCommandBuffer(VkCommandBuffer commandBuffer, VkSemaphore imageAvailableSemaphore,
+				 VkSemaphore renderFinishedSemaphore, VkFence inFlightFence)
 	{
 		const VkSemaphoreSubmitInfoKHR waitSemaphore{
 		    .sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO_KHR,
@@ -159,16 +155,15 @@ namespace clz::renderer
 
 	void present(VkSemaphore semaphore, uint32_t imageIndex)
 	{
-		const VkPresentInfoKHR presentInfo{
-			.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
-			.waitSemaphoreCount = 1,
-			.pWaitSemaphores = &semaphore,
-			.swapchainCount = 1,
-			.pSwapchains = &r_swapchainContext.swapchain,
-			.pImageIndices = &imageIndex
-		};
+		const VkPresentInfoKHR presentInfo{.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+						   .waitSemaphoreCount = 1,
+						   .pWaitSemaphores = &semaphore,
+						   .swapchainCount = 1,
+						   .pSwapchains = &r_swapchainContext.swapchain,
+						   .pImageIndices = &imageIndex};
 
-		if (vkQueuePresentKHR(r_deviceContext.presentQueue, &presentInfo) != VK_SUCCESS) [[unlikely]]
+		if (vkQueuePresentKHR(r_deviceContext.presentQueue, &presentInfo) != VK_SUCCESS)
+		    [[unlikely]]
 		{
 			clz::log::error("renderer/mainloop: vkQueuePresent failed");
 		}

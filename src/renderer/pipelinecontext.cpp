@@ -82,8 +82,9 @@ namespace clz::renderer
 	std::expected<void, std::string> createMainPipeline()
 	{
 		// Create shaders modules
-		auto shaderModuleResult = createShaderModules(r_pipelineContext, "shaders/triangle.vert.spirv",
-				    "shaders/triangle.frag.spirv");
+		auto shaderModuleResult =
+		    createShaderModules(r_pipelineContext, "shaders/triangle.vert.spirv",
+					"shaders/triangle.frag.spirv");
 		if (!shaderModuleResult) [[unlikely]]
 		{
 			clz::log::error(shaderModuleResult.error());
@@ -174,13 +175,8 @@ namespace clz::renderer
 
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipelineLayoutInfo.setLayoutCount = 0;		  // Optional
-		pipelineLayoutInfo.pSetLayouts = nullptr;	  // Optional
-		pipelineLayoutInfo.pushConstantRangeCount = 0;	  // Optional
-		pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
-
 		if (vkCreatePipelineLayout(r_deviceContext.device, &pipelineLayoutInfo, nullptr,
-					   &r_pipelineContext.layout) != VK_SUCCESS)
+					   &r_pipelineContext.layout) != VK_SUCCESS) [[unlikely]]
 		{
 			clz::log::error("Could not create pipeline layout");
 			return std::unexpected("could not create pipeline");

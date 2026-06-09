@@ -66,9 +66,9 @@ namespace clz::renderer
 	void destroyInstance();
 
 	/**
-	  * @brief Destroys the debug messenger
-	  * @note must be called before destroying the instance
-	  */
+	 * @brief Destroys the debug messenger
+	 * @note must be called before destroying the instance
+	 */
 	void destroyDebugMessenger();
 
 	/**
