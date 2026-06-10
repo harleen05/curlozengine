@@ -1,4 +1,4 @@
-/*
+/**
  * @file framecontext.cpp
  * @author curl0z
  * @brief Implementation of the initialization

@@ -1,4 +1,4 @@
-/*
+/**
  * @file initializers.cpp
  * @author curl0z
  * @brief Implementation of initialization
@@ -15,24 +15,19 @@ namespace clz::renderer
 {
 	std::expected<void, std::string> initDeviceContext()
 	{
-		auto instanceResult = createInstance();
-		if (!instanceResult)
+		if (auto instanceResult = createInstance(); !instanceResult)
 			return std::unexpected(instanceResult.error());
 
-		auto debugMessengerResult = createDebugMessenger();
-		if (!debugMessengerResult)
+		if (auto debugMessengerResult = createDebugMessenger(); !debugMessengerResult)
 			return std::unexpected(debugMessengerResult.error());
 
-		auto surfacerResult = createSurface();
-		if (!surfacerResult)
+		if (auto surfacerResult = createSurface(); !surfacerResult)
 			return std::unexpected(surfacerResult.error());
 
-		auto gpuResult = selectPhysicalDevice();
-		if (!gpuResult)
+		if (auto gpuResult = selectPhysicalDevice(); gpuResult)
 			return std::unexpected(gpuResult.error());
 
-		auto logicalDeviceResult = createLogicalDevice();
-		if (!logicalDeviceResult)
+		if (auto logicalDeviceResult = createLogicalDevice(); !logicalDeviceResult)
 			return std::unexpected(logicalDeviceResult.error());
 
 		clz::log::debug("renderer: initialized device context successfully");
@@ -42,8 +37,7 @@ namespace clz::renderer
 
 	std::expected<void, std::string> initSwapchainContext()
 	{
-		auto result = createSwapchain();
-		if (!result)
+		if (auto result = createSwapchain(); !result)
 			return std::unexpected(result.error());
 
 		clz::log::debug("initialized swapchain context successfully");
@@ -52,8 +46,7 @@ namespace clz::renderer
 
 	std::expected<void, std::string> initPipelineContext()
 	{
-		auto result = createMainPipeline();
-		if (!result)
+		if (auto result = createMainPipeline(); !result)
 			return std::unexpected(result.error());
 
 		clz::log::debug("initialized pipeline context successfully");
@@ -63,16 +56,13 @@ namespace clz::renderer
 
 	std::expected<void, std::string> initFrameContext()
 	{
-		auto commandPoolResult = createCommandPool();
-		if (!commandPoolResult)
+		if (auto commandPoolResult = createCommandPool(); commandPoolResult)
 			return std::unexpected(commandPoolResult.error());
 
-		auto commandBufferResult = createCommandBuffer();
-		if (!commandBufferResult)
+		if (auto commandBufferResult = createCommandBuffer(); commandBufferResult)
 			return std::unexpected(commandBufferResult.error());
 
-		auto syncObjectResult = createSyncObjects();
-		if (!syncObjectResult)
+		if (auto syncObjectResult = createSyncObjects(); syncObjectResult)
 			return std::unexpected(syncObjectResult.error());
 
 		clz::log::debug("initialized frame context successfully");

@@ -1,4 +1,4 @@
-/*
+/**
  * @file devicecontext.cpp
  * @author curl0z
  * @brief Implementation of the initialization
@@ -16,10 +16,10 @@
 
 namespace clz::renderer
 {
-#ifdef NDEBUG
-	constexpr bool enableValidationLayers = false;
-#else
+#ifdef CLZ_DEBUG
 	constexpr bool enableValidationLayers = true;
+#else
+	constexpr bool enableValidationLayers = false;
 #endif
 
 	std::expected<void, std::string>
@@ -194,7 +194,7 @@ namespace clz::renderer
 		const auto createMessenger =
 		    reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(
 			r_deviceContext.instance, "vkCreateDebugUtilsMessengerEXT"));
-		if (createMessenger == nullptr)
+		if (!createMessenger)
 		{
 			clz::log::error(
 			    "renderer: Could not find the debug messenger creator function");

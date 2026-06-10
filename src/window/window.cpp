@@ -18,13 +18,12 @@ namespace clz::window
 {
 	void init()
 	{
-		auto result = initializeGLFW(&w_window);
-		if (!result) [[unlikely]]
+		if (auto result = initializeGLFW(&w_window); !result)
 		{
 			clz::log::error(result.error());
 			return;
 		}
-		clz::log::info("Initialized window system");
+		clz::log::debug("Initialized window system");
 	}
 
 	void shutdown()

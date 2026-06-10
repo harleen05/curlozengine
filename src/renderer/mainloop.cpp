@@ -1,4 +1,4 @@
-/*
+/**
  * @file mainloop.cpp
  * @author curl0z
  * @brief Implementation of the main loop of the frame

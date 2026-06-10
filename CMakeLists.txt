@@ -37,10 +37,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Vulkan::Vulkan)
 add_subdirectory(external/glfw)
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
 
-#ENTT
-add_subdirectory(external/entt)
-target_link_libraries(${PROJECT_NAME} PRIVATE EnTT::EnTT)
-
 #JOLT
 set(JPH_USE_DX12 OFF)
 set(JPH_USE_VK OFF)
