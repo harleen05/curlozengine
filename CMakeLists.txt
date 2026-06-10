@@ -19,7 +19,7 @@ find_package(Vulkan REQUIRED)
 ## Compile options
 
 # Compile Profile
-target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>: CLZ_DEBUG >)
+target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:CLZ_DEBUG>)
 
 #SSE 4.1 instruction sets
 target_compile_options(${PROJECT_NAME} PRIVATE -msse4.1)
@@ -36,10 +36,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Vulkan::Vulkan)
 #GLFW
 add_subdirectory(external/glfw)
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
-
-#ENTT
-add_subdirectory(external/entt)
-target_link_libraries(${PROJECT_NAME} PRIVATE EnTT::EnTT)
 
 #JOLT
 set(JPH_USE_DX12 OFF)

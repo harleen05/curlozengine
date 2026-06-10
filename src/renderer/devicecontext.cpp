@@ -1,4 +1,4 @@
-/*
+/**
  * @file devicecontext.cpp
  * @author curl0z
  * @brief Implementation of the initialization
@@ -16,10 +16,10 @@
 
 namespace clz::renderer
 {
-#ifdef NDEBUG
-	constexpr bool enableValidationLayers = false;
-#else
+#ifdef CLZ_DEBUG
 	constexpr bool enableValidationLayers = true;
+#else
+	constexpr bool enableValidationLayers = false;
 #endif
 
 	std::expected<void, std::string>
@@ -45,14 +45,14 @@ namespace clz::renderer
 		{
 			const bool found =
 			    std::any_of(availableExtensions.begin(), availableExtensions.end(),
-					[&](auto availableExtension) {
+					[&](auto& availableExtension) {
 						return std::strcmp(availableExtension.extensionName,
 								   requiredExtension) == 0;
 					});
 			if (!found)
 				return std::unexpected(
 				    "Extension: " + std::string(requiredExtension) +
-				    " not available");
+				      " not available");
 		}
 		clz::log::debug("All required instance extensions present");
 		return {};
@@ -100,7 +100,7 @@ namespace clz::renderer
 		appInfo.applicationVersion =
 		    VK_MAKE_VERSION(clz::config::getInt("engine", "version_major", 0),
 				    clz::config::getInt("engine", "version_minor", 0),
-				    clz::config::getInt("engine", "version_major", 0));
+				    clz::config::getInt("engine", "version_patch", 0));
 		// Our application's name
 		appInfo.pEngineName = "Curloz Engine";
 		// Which API version we want to use
@@ -126,8 +126,7 @@ namespace clz::renderer
 
 		// Enable layers
 		std::vector<const char*> layers;
-		auto layersResult = getValidationLayers(layers);
-		if (!layersResult)
+		if (auto layersResult = getValidationLayers(layers); !layersResult)
 			return std::unexpected(layersResult.error());
 
 		if (enableValidationLayers)
@@ -141,9 +140,8 @@ namespace clz::renderer
 			instanceInfo.ppEnabledLayerNames = nullptr;
 		}
 
-		VkResult instanceCreationResult =
-		    vkCreateInstance(&instanceInfo, nullptr, &r_deviceContext.instance);
-		if (instanceCreationResult != VK_SUCCESS)
+		if (const VkResult instanceCreationResult = vkCreateInstance(&instanceInfo, nullptr, &r_deviceContext.instance);
+			instanceCreationResult != VK_SUCCESS)
 		{
 			clz::log::error("Could not create instance");
 			return std::unexpected("Could not create instance");
@@ -194,7 +192,7 @@ namespace clz::renderer
 		const auto createMessenger =
 		    reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(
 			r_deviceContext.instance, "vkCreateDebugUtilsMessengerEXT"));
-		if (createMessenger == nullptr)
+		if (!createMessenger)
 		{
 			clz::log::error(
 			    "renderer: Could not find the debug messenger creator function");
