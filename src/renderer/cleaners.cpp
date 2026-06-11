@@ -1,4 +1,4 @@
-/*
+/**
  * @file cleaners.cpp
  * @author curl0z
  * @brief Implementation of all the cleanup functions

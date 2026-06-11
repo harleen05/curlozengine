@@ -1,4 +1,4 @@
-/*
+/**
  * @file swapchaincontext.cpp
  * @author curl0z
  * @brief Implementation of the initialization

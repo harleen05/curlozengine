@@ -1,11 +1,9 @@
 /**
  * @file components.hpp
  * @author curl0z
- * @brief ECS component definitions for Curloz Engine.
+ * @brief ECS component definitions
  *
- * All components are plain data structs — no logic, no methods.
- * Logic lives in systems. Components are attached to entities via
- * the EnTT registry in variables.hpp.
+ * All components should be plain data structs.
  */
 
 #pragma once
@@ -24,10 +22,13 @@ namespace clz::ecs
 	 */
 	struct TransformComponent
 	{
-		clz::math::vec3 position = {0, 0, 0}; ///< World space position.
-		clz::math::vec3 rotation = {0, 0,
-					    0};	   ///< Euler angles in degrees (pitch, yaw, roll).
-		clz::math::vec3 scale = {1, 1, 1}; ///< Non-uniform scale.
+		clz::math::vec3 position = {0, 0, 0};	///< World space position.
+		clz::math::vec3 rotation = {0, 0, 0};	///< Euler angles in degrees (pitch, yaw, roll).
+		clz::math::vec3 scale	 = {1, 1, 1};	///< Non-uniform scale.
+
+		TransformComponent(const clz::math::vec3 &position, const clz::math::vec3 &rotation,
+					const clz::math::vec3 &scale) : position(position), rotation(rotation), scale(scale) {}
+
 	};
 
 } // namespace clz::ecs

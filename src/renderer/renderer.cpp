@@ -1,4 +1,4 @@
-/*
+/**
  * @file renderer.cpp
  * @author curl0z
  * @brief Implementation of the public header
@@ -15,35 +15,31 @@ namespace clz::renderer
 {
 	void init()
 	{
-		auto deviceContextResult = initDeviceContext();
-		if (!deviceContextResult)
+		if (auto deviceContextResult = initDeviceContext(); !deviceContextResult)
 		{
 			clz::log::error(deviceContextResult.error());
 			return;
 		}
 
-		auto swapchainContextResult = initSwapchainContext();
-		if (!swapchainContextResult)
+		if (auto swapchainContextResult = initSwapchainContext(); !swapchainContextResult)
 		{
 			clz::log::error(swapchainContextResult.error());
 			return;
 		}
 
-		auto pipelineContextResult = initPipelineContext();
-		if (!pipelineContextResult)
+		if (auto pipelineContextResult = initPipelineContext(); !pipelineContextResult)
 		{
 			clz::log::error(pipelineContextResult.error());
 			return;
 		}
 
-		auto frameContextResult = initFrameContext();
-		if (!frameContextResult)
+		if (auto frameContextResult = initFrameContext(); !frameContextResult)
 		{
 			clz::log::error(frameContextResult.error());
 			return;
 		}
 
-		clz::log::info("initialized all renderer context's");
+		clz::log::debug("initialized all renderer context's");
 	}
 
 	void update(const float deltaTime)

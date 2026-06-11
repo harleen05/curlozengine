@@ -8,17 +8,16 @@ namespace clz::audio
 {
 	void init()
 	{
-		auto result = initializeOpenAL(au_device, au_context);
-		if (!result)
+		if (auto result = initializeOpenAL(au_device, au_context); !result)
 		{
 			clz::log::error(result.error());
 		}
-		clz::log::info("Initialized audio");
+		clz::log::debug("Initialized audio");
 	}
 
 	void shutdown()
 	{
 		closeOpenAL(au_device, au_context);
-		clz::log::info("Shut down audio");
+		clz::log::debug("Shut down audio");
 	}
 } // namespace clz::audio
