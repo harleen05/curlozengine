@@ -1,3 +1,12 @@
+/**
+ * @file entity.hpp
+ * @author curl0z
+ * @brief Handles creation and destruction of entities
+ *
+ * An entity is just a unique integer ID. All data lives in
+ * component storages indexed by this ID.
+ */
+
 #pragma once
 
 #include <cstdint>
@@ -6,10 +15,17 @@
 
 namespace clz::ecs
 {
+	/// @brief Entity handle
+	/// just a unique integer ID.
 	using entity = uint32_t;
 
-	constexpr entity NULL_ENTITY  = std::numeric_limits<uint32_t>::max();
-	constexpr entity MAX_ENTITIES = 128;
+	/// @brief Sentinel value representing an invalid or null entity.
+	constexpr entity NULL_ENTITY = std::numeric_limits<uint32_t>::max();
 
+	/// @brief Initial sparse array size. Grows dynamically as needed.
+	constexpr entity MAX_ENTITIES = 256;
+
+	/// @brief All entity IDs. Index is not the same as entity ID after removals.
 	inline std::vector<entity> ecs_entities;
-}
+
+} // namespace clz::ecs

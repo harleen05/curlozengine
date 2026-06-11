@@ -1,11 +1,9 @@
 /**
  * @file components.hpp
  * @author curl0z
- * @brief ECS component definitions for Curloz Engine.
+ * @brief ECS component definitions
  *
- * All components are plain data structs — no logic, no methods.
- * Logic lives in systems. Components are attached to entities via
- * the EnTT registry in variables.hpp.
+ * All components should be plain data structs.
  */
 
 #pragma once

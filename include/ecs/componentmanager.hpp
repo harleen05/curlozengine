@@ -1,3 +1,16 @@
+/**
+ * @file componentmanager.hpp
+ * @author curl0z
+ * @brief Component storage registry and component operation functions.
+ *
+ * Manages all ComponentStorage instances via a flat vector indexed
+ * by component ID. Component IDs are assigned at runtime on first
+ * call to componentID<T>().
+ *
+ * Hot path functions: getStorage, addComponent, removeComponent, getComponent.
+ * Cold path functions: deleteAllComponents, removeAllComponentsForEntity.
+ */
+
 #pragma once
 
 #include "componentstorage.hpp"
@@ -5,99 +18,169 @@
 
 namespace clz::ecs
 {
-        inline std::vector<IComponentStorage*> ecs_componentStorages;
-        inline uint32_t ecs_componentCounter = 0;
-}
+	/// @brief Flat array of all component storages, indexed by component ID.
+	inline std::vector<IComponentStorage*> ecs_componentStorages;
+
+	/// @brief Auto-incrementing counter for assigning unique component IDs.
+	inline uint32_t ecs_componentCounter = 0;
+
+} // namespace clz::ecs
+
 namespace clz::ecs
 {
-        template<typename T>
-        uint32_t componentID()
-        {
-                static uint32_t id = ecs_componentCounter++;
-                return id;
-        }
-
-        template<typename T>
-        ComponentStorage<T>& getStorage()
-        {
-                auto id = componentID<T>();
-                if (id >= ecs_componentStorages.size())
-                {
-                        ecs_componentStorages.resize(id + 1, nullptr);
-                        ecs_componentStorages[id] = new ComponentStorage<T>;
-                        return static_cast<ComponentStorage<T>&>(*ecs_componentStorages[id]);
-                }
-                return static_cast<ComponentStorage<T>&>(*ecs_componentStorages[id]);
-        }
+	/**
+	 * @brief Returns the unique integer ID for component type T.
+	 *
+	 * ID is assigned on first call and remains constant for the
+	 * lifetime of the program. Uses a static local — no registration needed.
+	 *
+	 * @tparam T Component type.
+	 * @return Unique integer ID for T.
+	 */
 	template<typename T>
-	std::vector<T>& getComponentArray()
-        {
-	        auto& componentStorage = getStorage<T>();
-        	return componentStorage.storage;
-        }
+	uint32_t componentID()
+	{
+		static uint32_t id = ecs_componentCounter++;
+		return id;
+	}
 
-        inline void deleteAllComponents()
-        {
-                for (const auto& storage : ecs_componentStorages)
-                {
-                        delete storage;
-                }
-                ecs_componentStorages.clear();
-        }
+	/**
+	 * @brief Returns the ComponentStorage for component type T.
+	 *
+	 * Creates the storage on first call. Uses a flat vector indexed
+	 * by component ID — O(1) with no hashing.
+	 *
+	 * @tparam T Component type.
+	 * @return Reference to the ComponentStorage<T> for T.
+	 */
+	template<typename T>
+	ComponentStorage<T>& getStorage()
+	{
+		auto id = componentID<T>();
+		if (id >= ecs_componentStorages.size())
+		{
+			ecs_componentStorages.resize(id + 1, nullptr);
+			ecs_componentStorages[id] = new ComponentStorage<T>;
+		}
+		return static_cast<ComponentStorage<T>&>(*ecs_componentStorages[id]);
+	}
 
-        template<typename T>
-        void addComponent(const entity e, const T component)
-        {
-                auto& componentStorage = getStorage<T>();
-                uint32_t index = componentStorage.storage.size();
-                componentStorage.storage.emplace_back(component);
-                componentStorage.dense.emplace_back(e);
-                componentStorage.sparse[e] = index;
-        }
-        template<typename T>
-        bool hasComponent(const entity e)
-        {
-                auto& componentStorage = getStorage<T>();
-                return componentStorage.sparse[e] != NULL_ENTITY;
-        }
+	/**
+	 * @brief Destroys all component storages and clears the registry.
+	 *
+	 * @note Call this in shutdown before clearing entities.
+	 */
+	inline void deleteAllComponents()
+	{
+		for (auto& storage : ecs_componentStorages)
+			delete storage;
+		ecs_componentStorages.clear();
+	}
 
-        template<typename T>
-        void removeComponent(const entity e)
-        {
-                auto& componentStorage = getStorage<T>();
-                if (componentStorage.sparse[e] == NULL_ENTITY)
-                        return;
+	/**
+	 * @brief Attaches a component to an entity.
+	 *
+	 * @tparam T Component type.
+	 * @param e Entity to attach the component to.
+	 * @param component Component data to store.
+	 */
+	template<typename T>
+	void addComponent(entity e, T component)
+	{
+		auto& componentStorage   = getStorage<T>();
+		uint32_t index           = componentStorage.storage.size();
+		componentStorage.storage.emplace_back(component);
+		componentStorage.dense.emplace_back(e);
+		componentStorage.sparse[e] = index;
+	}
 
-                uint32_t index = componentStorage.sparse[e];
-                uint32_t last = componentStorage.storage.size() - 1;
+	/**
+	 * @brief Returns true if entity @p e has component T.
+	 *
+	 * @tparam T Component type.
+	 * @param e Entity to check.
+	 * @return True if the entity has the component, false otherwise.
+	 */
+	template<typename T>
+	bool hasComponent(entity e)
+	{
+		auto& componentStorage = getStorage<T>();
+		return componentStorage.sparse[e] != NULL_ENTITY;
+	}
 
-                componentStorage.storage[index] = componentStorage.storage[last];
-                componentStorage.dense[index] = componentStorage.dense[last];
-                componentStorage.sparse[componentStorage.dense[index]] = index;
+	/**
+	 * @brief Removes component T from entity @p e using swap-and-pop.
+	 *
+	 * No-op if the entity does not have the component.
+	 *
+	 * @tparam T Component type.
+	 * @param e Entity to remove the component from.
+	 */
+	template<typename T>
+	void removeComponent(entity e)
+	{
+		auto& componentStorage = getStorage<T>();
+		if (componentStorage.sparse[e] == NULL_ENTITY)
+			return;
 
-                componentStorage.dense.pop_back();
-                componentStorage.storage.pop_back();
-                componentStorage.sparse[e] = NULL_ENTITY;
+		uint32_t index = componentStorage.sparse[e];
+		uint32_t last  = componentStorage.storage.size() - 1;
 
-        }
-        inline void removeAllComponentsForEntity(const entity e)
-        {
-                for (const auto& storage : ecs_componentStorages)
-                {
-                        storage->removeEntityData(e);
-                }
-        }
+		componentStorage.storage[index]                        = componentStorage.storage[last];
+		componentStorage.dense[index]                          = componentStorage.dense[last];
+		componentStorage.sparse[componentStorage.dense[index]] = index;
 
-        template<typename T>
-        T& getComponent(entity e)
-        {
-                auto& componentStorage = getStorage<T>();
-                return componentStorage.storage[componentStorage.sparse[e]];
-        }
+		componentStorage.dense.pop_back();
+		componentStorage.storage.pop_back();
+		componentStorage.sparse[e] = NULL_ENTITY;
+	}
 
-        template<typename... Components>
-        std::tuple<Components&...> getComponents(entity e)
-        {
-                return std::tie(getComponent<Components>(e)...);
-        }
-}
+	/**
+	 * @brief Removes all components from entity @p e across all storages.
+	 *
+	 * Iterates all registered storages and calls removeEntityData.
+	 * Called by removeEntity and shutdown.
+	 *
+	 * @param e Entity to strip all components from.
+	 */
+	inline void removeAllComponentsForEntity(const entity e)
+	{
+		for (auto& storage : ecs_componentStorages)
+			storage->removeEntityData(e);
+	}
+
+	/**
+	 * @brief Returns a reference to component T for entity @p e.
+	 *
+	 * @tparam T Component type.
+	 * @param e Entity to retrieve the component for.
+	 * @return Reference to the component in storage.
+	 * @warning Undefined behaviour if the entity does not have component T.
+	 */
+	template<typename T>
+	T& getComponent(entity e)
+	{
+		auto& componentStorage = getStorage<T>();
+		return componentStorage.storage[componentStorage.sparse[e]];
+	}
+
+	/**
+	 * @brief Returns references to multiple components for entity @p e.
+	 *
+	 * Returns a tuple of references. Modifications affect
+	 * the actual storage data.
+	 *
+	 * @note Dont use this function directly in hot loops.
+	 * Tuple construction adds overhead not suitable for tight iteration.
+	 *
+	 * @tparam Components Component types to retrieve.
+	 * @param e Entity to retrieve components for.
+	 * @return std::tuple of references to each requested component.
+	 */
+	template<typename... Components>
+	std::tuple<Components&...> getComponents(entity e)
+	{
+		return std::tie(getComponent<Components>(e)...);
+	}
+
+} // namespace clz::ecs
