@@ -13,7 +13,7 @@
 
 namespace clz::renderer
 {
-	void waitForGPU(const VkFence fence)
+	void waitForGPU(VkFence fence)
 	{
 		if (vkWaitForFences(renderer::r_deviceContext.device, 1, &fence, VK_TRUE,
 				    UINT64_MAX) != VK_SUCCESS) [[unlikely]]
@@ -23,7 +23,7 @@ namespace clz::renderer
 			clz::log::error("Failed to reset fence");
 	}
 
-	void acquireNextImage(const VkSemaphore semaphore, uint32_t& rImageIndex)
+	void acquireNextImage(VkSemaphore semaphore, uint32_t& rImageIndex)
 	{
 		const VkResult acquireResult =
 		    vkAcquireNextImageKHR(r_deviceContext.device, r_swapchainContext.swapchain,
@@ -105,6 +105,7 @@ namespace clz::renderer
 
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
 				  r_pipelineContext.pipeline);
+
 		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 
 		vkCmdEndRendering(commandBuffer);

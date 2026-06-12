@@ -14,8 +14,7 @@ namespace clz::ecs
 {
 	void init()
 	{
-		auto result = loadEntities();
-		if (!result)
+		if (auto result = loadEntities(); !result)
 		{
 			clz::log::error(result.error());
 			return;

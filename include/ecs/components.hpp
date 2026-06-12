@@ -27,7 +27,8 @@ namespace clz::ecs
 		clz::math::vec3 scale	 = {1, 1, 1};	///< Non-uniform scale.
 
 		TransformComponent(const clz::math::vec3 &position, const clz::math::vec3 &rotation,
-					const clz::math::vec3 &scale) : position(position), rotation(rotation), scale(scale) {}
+					const clz::math::vec3 &scale) : position(position), rotation(rotation),
+									scale(scale) {}
 
 	};
 

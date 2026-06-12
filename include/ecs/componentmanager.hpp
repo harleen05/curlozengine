@@ -165,6 +165,32 @@ namespace clz::ecs
 	}
 
 	/**
+	 * @brief Returns all entities that have the asked component.
+	 *
+	 * Returns a const reference to the internal dense array.
+	 *
+	 * @tparam T Component type to query.
+	 * @return Const reference to the dense entity array for asked component.
+	 *
+	 * @warning The returned reference is invalidated if any component
+	 * of type T is added or removed during iteration. Never add or
+	 * remove components of type T while iterating the result.
+	 */
+	template<typename T>
+	const std::vector<entity>& getEntitiesWithComponent()
+	{
+		auto& componentStorage = getStorage<T>();
+		return componentStorage.dense;
+	}
+
+	template<typename T>
+	std::vector<T>& getComponentArray()
+	{
+		auto& componentStorage = getStorage<T>();
+		return componentStorage.storage;
+	}
+
+	/**
 	 * @brief Returns references to multiple components for entity @p e.
 	 *
 	 * Returns a tuple of references. Modifications affect

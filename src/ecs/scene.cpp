@@ -53,7 +53,7 @@ namespace clz::ecs
 			}
 		}
 
-		// Log loaded entities
+		// Log loaded components
 		auto& componentArray = getComponentArray<TransformComponent>();
 		for (const auto component : componentArray)
 		{
