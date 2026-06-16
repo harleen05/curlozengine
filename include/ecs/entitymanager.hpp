@@ -30,8 +30,6 @@ namespace clz::ecs
 		return id;
 	}
 
-
-
 	/**
 	 * @brief Removes an entity and all its components.
 	 *

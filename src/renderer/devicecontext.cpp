@@ -25,11 +25,9 @@ namespace clz::renderer
 	std::expected<void, std::string>
 	getRequiredInstanceExtensions(std::vector<const char*>& rRequiredExtensions)
 	{
-		auto result = clz::window::getRequiredVulkanExtensions(rRequiredExtensions);
-		if (!result)
-		{
+		if (auto result = clz::window::getRequiredVulkanExtensions(rRequiredExtensions);
+		    !result)
 			return std::unexpected(result.error());
-		}
 
 		if (enableValidationLayers)
 		{
@@ -43,16 +41,16 @@ namespace clz::renderer
 
 		for (auto requiredExtension : rRequiredExtensions)
 		{
-			const bool found =
-			    std::any_of(availableExtensions.begin(), availableExtensions.end(),
-					[&](auto& availableExtension) {
-						return std::strcmp(availableExtension.extensionName,
-								   requiredExtension) == 0;
-					});
+			const bool found = std::ranges::any_of(
+			    availableExtensions.begin(), availableExtensions.end(),
+			    [&](auto& availableExtension) {
+				    return std::strcmp(availableExtension.extensionName,
+						       requiredExtension) == 0;
+			    });
 			if (!found)
 				return std::unexpected(
 				    "Extension: " + std::string(requiredExtension) +
-				      " not available");
+				    " not available");
 		}
 		clz::log::debug("All required instance extensions present");
 		return {};
@@ -70,7 +68,7 @@ namespace clz::renderer
 
 		for (auto layer : rValidationLayers)
 		{
-			const bool found = std::any_of(
+			const bool found = std::ranges::any_of(
 			    availableLayers.begin(), availableLayers.end(),
 			    [&](auto availableLayer) {
 				    return std::strcmp(layer, availableLayer.layerName) == 0;
@@ -116,9 +114,9 @@ namespace clz::renderer
 
 		// Get Extensions
 		std::vector<const char*> requiredExtensions;
-		auto instanceResult = getRequiredInstanceExtensions(requiredExtensions);
-		if (!instanceResult)
-			return std::unexpected(instanceResult.error());
+		if (auto fetchResult = getRequiredInstanceExtensions(requiredExtensions);
+		    !fetchResult)
+			return std::unexpected(fetchResult.error());
 
 		// Send info about extensions
 		instanceInfo.enabledExtensionCount = requiredExtensions.size();
@@ -140,8 +138,9 @@ namespace clz::renderer
 			instanceInfo.ppEnabledLayerNames = nullptr;
 		}
 
-		if (const VkResult instanceCreationResult = vkCreateInstance(&instanceInfo, nullptr, &r_deviceContext.instance);
-			instanceCreationResult != VK_SUCCESS)
+		if (const VkResult instanceCreationResult =
+			vkCreateInstance(&instanceInfo, nullptr, &r_deviceContext.instance);
+		    instanceCreationResult != VK_SUCCESS)
 		{
 			clz::log::error("Could not create instance");
 			return std::unexpected("Could not create instance");
@@ -213,10 +212,10 @@ namespace clz::renderer
 
 	std::expected<void, std::string> createSurface()
 	{
-		auto result = clz::window::createVulkanSurface(r_deviceContext.instance,
-							       r_deviceContext.surface);
-		if (!result)
-			return std::unexpected(result.error());
+		if (auto surfaceResult = clz::window::createVulkanSurface(r_deviceContext.instance,
+									  r_deviceContext.surface);
+		    !surfaceResult)
+			return std::unexpected(surfaceResult.error());
 
 		clz::log::debug("Created window surface");
 		return {};
@@ -231,7 +230,7 @@ namespace clz::renderer
 					   physicalDevices.data());
 
 		uint32_t maxScore = 0;
-		for (auto physicalDevice : physicalDevices)
+		for (const auto physicalDevice : physicalDevices)
 		{
 			VkPhysicalDeviceProperties deviceProperties;
 			vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
@@ -311,10 +310,10 @@ namespace clz::renderer
 			clz::log::error("No Suitable GPU found");
 			return std::unexpected("No Suitable GPU found");
 		}
-		VkPhysicalDeviceProperties selecrtedDeviceProperties;
-		vkGetPhysicalDeviceProperties(r_deviceContext.gpu, &selecrtedDeviceProperties);
+		VkPhysicalDeviceProperties selectedDeviceProperties;
+		vkGetPhysicalDeviceProperties(r_deviceContext.gpu, &selectedDeviceProperties);
 
-		clz::log::debug("Using GPU: " + std::string(selecrtedDeviceProperties.deviceName));
+		clz::log::debug("Using GPU: " + std::string(selectedDeviceProperties.deviceName));
 
 		return {};
 	}
@@ -335,7 +334,7 @@ namespace clz::renderer
 
 		for (auto requiredDeviceExtension : rRequiredDeviceExtensions)
 		{
-			const bool found = std::any_of(
+			const bool found = std::ranges::any_of(
 			    availableDeviceExtensions.begin(), availableDeviceExtensions.end(),
 			    [&](auto availableExtension) {
 				    return std::strcmp(requiredDeviceExtension,
@@ -405,7 +404,9 @@ namespace clz::renderer
 		deviceInfo.pNext = &features13;
 
 		std::vector<const char*> requiredDeviceExtensions;
-		getRequiredDeviceExtensions(requiredDeviceExtensions);
+		if (auto fetchResult = getRequiredDeviceExtensions(requiredDeviceExtensions);
+		    !fetchResult)
+			return std::unexpected(fetchResult.error());
 
 		deviceInfo.enabledExtensionCount =
 		    static_cast<uint32_t>(requiredDeviceExtensions.size());

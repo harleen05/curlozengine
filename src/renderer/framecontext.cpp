@@ -25,29 +25,29 @@ namespace clz::renderer
 			return std::unexpected("could not create command pool :(");
 		}
 
-		clz::log::debug("created command pool");
+		clz::log::info("created command pool");
 		return {};
 	}
 
-	std::expected<void, std::string> createCommandBuffer()
+	std::expected<void, std::string> createCommandBuffers()
 	{
 		VkCommandBufferAllocateInfo allocateInfo = {};
 		allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		allocateInfo.commandPool = r_frameContext.commandPool;
 		allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocateInfo.commandBufferCount = r_swapchainContext.images.size();
+		allocateInfo.commandBufferCount = FRAMES_IN_FLIGHT;
 
 		r_frameContext.commandBuffer.resize(
-		    static_cast<size_t>(r_swapchainContext.images.size()));
+		    static_cast<size_t>(FRAMES_IN_FLIGHT));
 
 		if (vkAllocateCommandBuffers(r_deviceContext.device, &allocateInfo,
 					     r_frameContext.commandBuffer.data()) != VK_SUCCESS)
 		{
-			clz::log::error("renderer: Failed to allocate command buffers");
-			return std::unexpected("renderer: failed to create command buffers");
+			clz::log::error("Failed to allocate command buffers");
+			return std::unexpected("Failed to create command buffers");
 		}
 
-		clz::log::debug("created command buffers");
+		clz::log::info("created command buffers");
 
 		return {};
 	}
@@ -55,7 +55,7 @@ namespace clz::renderer
 	std::expected<void, std::string> createSyncObjects()
 	{
 
-		r_frameContext.imageAvailableSemaphores.resize(
+		r_frameContext.renderReadySemaphores.resize(
 		    static_cast<size_t>(FRAMES_IN_FLIGHT));
 		r_frameContext.inFlightFences.resize(static_cast<size_t>(FRAMES_IN_FLIGHT));
 		for (size_t i = 0; i < FRAMES_IN_FLIGHT; ++i)
@@ -64,11 +64,11 @@ namespace clz::renderer
 			    .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
 			};
 			if (vkCreateSemaphore(r_deviceContext.device, &semaphoreInfo, nullptr,
-					      &r_frameContext.imageAvailableSemaphores[i]) !=
+					      &r_frameContext.renderReadySemaphores[i]) !=
 			    VK_SUCCESS)
 			{
-				clz::log::error("renderer: Could not create semaphores");
-				return std::unexpected("renderer: Could not create semaphores");
+				clz::log::error("Could not create semaphores");
+				return std::unexpected("Could not create semaphores");
 			}
 
 			VkFenceCreateInfo fenceInfo{.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
@@ -76,41 +76,41 @@ namespace clz::renderer
 			if (vkCreateFence(r_deviceContext.device, &fenceInfo, nullptr,
 					  &r_frameContext.inFlightFences[i]) != VK_SUCCESS)
 			{
-				clz::log::error("renderer: Could not create fence");
-				return std::unexpected("renderer: Could not create fence");
+				clz::log::error("Could not create fence");
+				return std::unexpected("Could not create fence");
 			}
 		}
 
-		r_frameContext.renderFinishedSemaphores.resize(
+		r_frameContext.presentReadySemaphores.resize(
 		    static_cast<size_t>(r_swapchainContext.images.size()));
-		for (size_t i = 0; i < r_swapchainContext.images.size(); ++i)
+		for (auto& semaphore : r_frameContext.presentReadySemaphores)
 		{
 			VkSemaphoreCreateInfo semaphoreInfo = {};
 			semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 			if (vkCreateSemaphore(r_deviceContext.device, &semaphoreInfo, nullptr,
-					      &r_frameContext.renderFinishedSemaphores[i]) !=
+					      &semaphore) !=
 			    VK_SUCCESS)
 			{
-				clz::log::error("renderer: Could not create semaphores");
-				return std::unexpected("renderer: Could not create semaphores");
+				clz::log::error("Could not create semaphores");
+				return std::unexpected("Could not create semaphores");
 			}
 		}
 
-		clz::log::debug("created All semaphores and fences");
+		clz::log::info("created All semaphores and fences");
 		return {};
 	}
 
 	void destroyCommandPool()
 	{
 		vkDestroyCommandPool(r_deviceContext.device, r_frameContext.commandPool, nullptr);
-		clz::log::debug("destroyed command pool");
+		clz::log::info("destroyed command pool");
 	}
 
 	void destroySyncObjects()
 	{
-		for (const auto imageAvailableSemaphore : r_frameContext.imageAvailableSemaphores)
+		for (const auto semaphore : r_frameContext.renderReadySemaphores)
 		{
-			vkDestroySemaphore(r_deviceContext.device, imageAvailableSemaphore,
+			vkDestroySemaphore(r_deviceContext.device, semaphore,
 					   nullptr);
 		}
 
@@ -119,13 +119,13 @@ namespace clz::renderer
 			vkDestroyFence(r_deviceContext.device, inFlightFence, nullptr);
 		}
 
-		for (const auto renderFinishedSemaphore : r_frameContext.renderFinishedSemaphores)
+		for (const auto semaphore : r_frameContext.presentReadySemaphores)
 		{
-			vkDestroySemaphore(r_deviceContext.device, renderFinishedSemaphore,
+			vkDestroySemaphore(r_deviceContext.device, semaphore,
 					   nullptr);
 		}
 
-		clz::log::debug("destroyed semaphores and fences");
+		clz::log::info("destroyed semaphores and fences");
 	}
 
 } // namespace clz::renderer

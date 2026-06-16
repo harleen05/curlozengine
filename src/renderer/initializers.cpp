@@ -59,7 +59,7 @@ namespace clz::renderer
 		if (auto commandPoolResult = createCommandPool(); !commandPoolResult)
 			return std::unexpected(commandPoolResult.error());
 
-		if (auto commandBufferResult = createCommandBuffer(); !commandBufferResult)
+		if (auto commandBufferResult = createCommandBuffers(); !commandBufferResult)
 			return std::unexpected(commandBufferResult.error());
 
 		if (auto syncObjectResult = createSyncObjects(); !syncObjectResult)

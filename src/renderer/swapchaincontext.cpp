@@ -7,8 +7,11 @@
 #include "renderer/swapchaincontext.hpp"
 #include "config/config.hpp"
 #include "core/logs.hpp"
+#include "renderer/cleaners.hpp"
+#include "renderer/initializers.hpp"
 #include "renderer/variables.hpp"
 #include "window/window.hpp"
+#include <string>
 
 namespace clz::renderer
 {
@@ -100,6 +103,7 @@ namespace clz::renderer
 		uint32_t imageCount = capabilities.minImageCount + 1;
 		if (imageCount > capabilities.maxImageCount && capabilities.maxImageCount > 0)
 			imageCount = capabilities.maxImageCount;
+		clz::log::debug("imageCount set to: " + std::to_string(imageCount));
 
 		VkSwapchainCreateInfoKHR swapchainInfo = {};
 		swapchainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -173,6 +177,17 @@ namespace clz::renderer
 
 		clz::log::debug("renderer: created swapchain");
 		return {};
+	}
+
+	void recreateSwapchainContext()
+	{
+		vkDeviceWaitIdle(r_deviceContext.device);
+
+		destroySwapchainContext();
+		if (const auto result = initSwapchainContext(); !result) [[unlikely]]
+		{
+			clz::log::error("Mid loop, failed to recreate swapchain");
+		}
 	}
 
 	void destroySwapchain()

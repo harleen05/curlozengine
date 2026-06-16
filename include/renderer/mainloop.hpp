@@ -25,12 +25,10 @@ namespace clz::renderer
 	void acquireNextImage(VkSemaphore semaphore, uint32_t& rImageIndex);
 
 	/**
-	 * @brief Recreates the swapchain.
-	 *
-	 * Called when the swapchain becomes invalid
-	 * Destroys and rebuilds the whole swapchain context
+	 * @brief Resets the fence, basically makes it unsignaled
+	 * @param fence Fence associated with current frame.
 	 */
-	void recreateSwapchain();
+	void resetFence(VkFence fence);
 
 	/**
 	 * @brief Begins recording a command buffer.

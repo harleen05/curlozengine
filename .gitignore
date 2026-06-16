@@ -3,3 +3,11 @@
 build
 compile_commands.json
 docs
+
+# shader binaries
+shader/triangle.vert.spirv
+shader/triangle.frag.spirv
+
+# Per directory test files
+include/renderer/test.hpp
+src/renderer/test.cpp

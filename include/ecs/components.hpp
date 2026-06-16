@@ -22,14 +22,16 @@ namespace clz::ecs
 	 */
 	struct TransformComponent
 	{
-		clz::math::vec3 position = {0, 0, 0};	///< World space position.
-		clz::math::vec3 rotation = {0, 0, 0};	///< Euler angles in degrees (pitch, yaw, roll).
-		clz::math::vec3 scale	 = {1, 1, 1};	///< Non-uniform scale.
+		clz::math::vec3 position = {0, 0, 0}; ///< World space position.
+		clz::math::vec3 rotation = {0, 0,
+					    0};	   ///< Euler angles in degrees (pitch, yaw, roll).
+		clz::math::vec3 scale = {1, 1, 1}; ///< Non-uniform scale.
 
-		TransformComponent(const clz::math::vec3 &position, const clz::math::vec3 &rotation,
-					const clz::math::vec3 &scale) : position(position), rotation(rotation),
-									scale(scale) {}
-
+		TransformComponent(const clz::math::vec3& position, const clz::math::vec3& rotation,
+				   const clz::math::vec3& scale)
+		    : position(position), rotation(rotation), scale(scale)
+		{
+		}
 	};
 
 } // namespace clz::ecs

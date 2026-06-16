@@ -30,7 +30,7 @@ namespace clz::renderer
 	 * number of command buffers.
 	 * Must be called after command pool has been created
 	 */
-	std::expected<void, std::string> createCommandBuffer();
+	std::expected<void, std::string> createCommandBuffers();
 
 	/*
 	 * @brief Creates all the frame sync objects

@@ -11,6 +11,9 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
+// TEST
+#include "renderer/test.hpp"
+
 namespace clz::renderer
 {
 	std::expected<void, std::string>
@@ -34,13 +37,13 @@ namespace clz::renderer
 					std::string(fragmentShaderLocation));
 		}
 
-		size_t vertexFileSize = (size_t)vertex_file.tellg();
+		auto vertexFileSize = vertex_file.tellg();
 		std::vector<char> vertexShaderCode(vertexFileSize);
 		vertex_file.seekg(0);
-		vertex_file.read(vertexShaderCode.data(), vertexFileSize);
+		vertex_file.read(vertexShaderCode.data(), (vertexFileSize));
 		vertex_file.close();
 
-		size_t fragFileSize = (size_t)frag_file.tellg();
+		auto fragFileSize = frag_file.tellg();
 		std::vector<char> fragShaderCode(fragFileSize);
 		frag_file.seekg(0);
 		frag_file.read(fragShaderCode.data(), fragFileSize);
@@ -116,12 +119,19 @@ namespace clz::renderer
 		dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
 		dynamicState.pDynamicStates = dynamicStates.data();
 
-		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-		vertexInputInfo.vertexBindingDescriptionCount = 0;
-		vertexInputInfo.pVertexBindingDescriptions = nullptr; // Optional
-		vertexInputInfo.vertexAttributeDescriptionCount = 0;
-		vertexInputInfo.pVertexAttributeDescriptions = nullptr; // Optional
+		// TEST START
+
+		auto bindingDescription = getVertexBindingDescription();
+		auto attributeDescriptions = getVertexAttributeDescription();
+		VkPipelineVertexInputStateCreateInfo vertexInputInfo = {
+		    .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+		    .vertexBindingDescriptionCount = 1,
+		    .pVertexBindingDescriptions = &bindingDescription,
+		    .vertexAttributeDescriptionCount =
+			static_cast<uint32_t>(attributeDescriptions.size()),
+		    .pVertexAttributeDescriptions = attributeDescriptions.data()};
+
+		// TEST END
 
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;

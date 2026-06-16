@@ -45,9 +45,11 @@ namespace clz::ecs
 			{
 				auto& t = entityData["components"]["transform"];
 				TransformComponent transformComponent(
-					clz::math::vec3(t["position"][0], t["position"][1], t["position"][2]),
-					clz::math::vec3(t["rotation"][0], t["rotation"][1], t["rotation"][2]),
-					clz::math::vec3(t["scale"][0], t["scale"][1], t["scale"][2]));
+				    clz::math::vec3(t["position"][0], t["position"][1],
+						    t["position"][2]),
+				    clz::math::vec3(t["rotation"][0], t["rotation"][1],
+						    t["rotation"][2]),
+				    clz::math::vec3(t["scale"][0], t["scale"][1], t["scale"][2]));
 
 				addComponent<TransformComponent>(entity, transformComponent);
 			}

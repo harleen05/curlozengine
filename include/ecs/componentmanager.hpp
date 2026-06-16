@@ -37,8 +37,7 @@ namespace clz::ecs
 	 * @tparam T Component type.
 	 * @return Unique integer ID for T.
 	 */
-	template<typename T>
-	uint32_t componentID()
+	template <typename T> uint32_t componentID()
 	{
 		static uint32_t id = ecs_componentCounter++;
 		return id;
@@ -53,8 +52,7 @@ namespace clz::ecs
 	 * @tparam T Component type.
 	 * @return Reference to the ComponentStorage<T> for T.
 	 */
-	template<typename T>
-	ComponentStorage<T>& getStorage()
+	template <typename T> ComponentStorage<T>& getStorage()
 	{
 		auto id = componentID<T>();
 		if (id >= ecs_componentStorages.size())
@@ -84,11 +82,10 @@ namespace clz::ecs
 	 * @param e Entity to attach the component to.
 	 * @param component Component data to store.
 	 */
-	template<typename T>
-	void addComponent(entity e, T component)
+	template <typename T> void addComponent(entity e, T component)
 	{
-		auto& componentStorage   = getStorage<T>();
-		uint32_t index           = componentStorage.storage.size();
+		auto& componentStorage = getStorage<T>();
+		uint32_t index = componentStorage.storage.size();
 		componentStorage.storage.emplace_back(component);
 		componentStorage.dense.emplace_back(e);
 		componentStorage.sparse[e] = index;
@@ -101,8 +98,7 @@ namespace clz::ecs
 	 * @param e Entity to check.
 	 * @return True if the entity has the component, false otherwise.
 	 */
-	template<typename T>
-	bool hasComponent(entity e)
+	template <typename T> bool hasComponent(entity e)
 	{
 		auto& componentStorage = getStorage<T>();
 		return componentStorage.sparse[e] != NULL_ENTITY;
@@ -116,18 +112,17 @@ namespace clz::ecs
 	 * @tparam T Component type.
 	 * @param e Entity to remove the component from.
 	 */
-	template<typename T>
-	void removeComponent(entity e)
+	template <typename T> void removeComponent(entity e)
 	{
 		auto& componentStorage = getStorage<T>();
 		if (componentStorage.sparse[e] == NULL_ENTITY)
 			return;
 
 		uint32_t index = componentStorage.sparse[e];
-		uint32_t last  = componentStorage.storage.size() - 1;
+		uint32_t last = componentStorage.storage.size() - 1;
 
-		componentStorage.storage[index]                        = componentStorage.storage[last];
-		componentStorage.dense[index]                          = componentStorage.dense[last];
+		componentStorage.storage[index] = componentStorage.storage[last];
+		componentStorage.dense[index] = componentStorage.dense[last];
 		componentStorage.sparse[componentStorage.dense[index]] = index;
 
 		componentStorage.dense.pop_back();
@@ -157,8 +152,7 @@ namespace clz::ecs
 	 * @return Reference to the component in storage.
 	 * @warning Undefined behaviour if the entity does not have component T.
 	 */
-	template<typename T>
-	T& getComponent(entity e)
+	template <typename T> T& getComponent(entity e)
 	{
 		auto& componentStorage = getStorage<T>();
 		return componentStorage.storage[componentStorage.sparse[e]];
@@ -176,15 +170,13 @@ namespace clz::ecs
 	 * of type T is added or removed during iteration. Never add or
 	 * remove components of type T while iterating the result.
 	 */
-	template<typename T>
-	const std::vector<entity>& getEntitiesWithComponent()
+	template <typename T> const std::vector<entity>& getEntitiesWithComponent()
 	{
 		auto& componentStorage = getStorage<T>();
 		return componentStorage.dense;
 	}
 
-	template<typename T>
-	std::vector<T>& getComponentArray()
+	template <typename T> std::vector<T>& getComponentArray()
 	{
 		auto& componentStorage = getStorage<T>();
 		return componentStorage.storage;
@@ -203,8 +195,7 @@ namespace clz::ecs
 	 * @param e Entity to retrieve components for.
 	 * @return std::tuple of references to each requested component.
 	 */
-	template<typename... Components>
-	std::tuple<Components&...> getComponents(entity e)
+	template <typename... Components> std::tuple<Components&...> getComponents(entity e)
 	{
 		return std::tie(getComponent<Components>(e)...);
 	}

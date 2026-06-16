@@ -1,11 +1,12 @@
-/*
+/**
  * @file vulkanhelper.cpp
  * @author curl0z
  * @brief Implementation of all the vulkan helper functions
  */
+
 #include "window/vulkanhelper.hpp"
-#include "window/window.hpp"
-#include <GLFW/glfw3.h>
+#include "renderer/renderer.hpp"
+#include "window/variables.hpp"
 
 namespace clz::window
 {
@@ -23,13 +24,18 @@ namespace clz::window
 		rRequiredExtensions.assign(glfwExtensions, glfwExtensions + glfwExtensionCount);
 		return {};
 	}
-	std::expected<void, std::string> createVulkanSurface(const VkInstance instance,
+	std::expected<void, std::string> createVulkanSurface(VkInstance instance,
 							     VkSurfaceKHR& rSurface)
 	{
-		if (glfwCreateWindowSurface(instance, getWindowHandle(), nullptr, &rSurface) !=
-		    VK_SUCCESS)
+		if (glfwCreateWindowSurface(instance, w_window, nullptr, &rSurface) != VK_SUCCESS)
 			return std::unexpected("Could not create window surface");
 
 		return {};
 	}
+
+	void hintRendererAboutResize(GLFWwindow* window, int, int)
+	{
+		clz::renderer::r_recreateSwapchain = true;
+	}
+
 } // namespace clz::window

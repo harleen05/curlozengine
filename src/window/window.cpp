@@ -1,28 +1,28 @@
-/*
+/**
  * @file window.cpp
  * @author curl0z
  * @brief Implementation of the window public header
  */
-#define GLFW_INCLUDE_VULKAN
 #include "window/window.hpp"
 #include "core/logs.hpp"
 #include "window/native.hpp"
-
-namespace clz::window
-{
-	/// @brief Internal window state.
-	static GLFWwindow* w_window = nullptr;
-} // namespace clz::window
+#include "window/variables.hpp"
+#include "window/vulkanhelper.hpp"
 
 namespace clz::window
 {
 	void init()
 	{
+		// Initialize window
 		if (auto result = initializeGLFW(&w_window); !result)
 		{
 			clz::log::error(result.error());
 			return;
 		}
+
+		// Initialize all callback functions
+		glfwSetFramebufferSizeCallback(w_window, hintRendererAboutResize);
+
 		clz::log::debug("Initialized window system");
 	}
 
@@ -34,11 +34,6 @@ namespace clz::window
 	void update()
 	{
 		pollEventsGLFW(&w_window);
-	}
-
-	GLFWwindow* getWindowHandle()
-	{
-		return w_window;
 	}
 
 	void getFramebufferExtents(int* width, int* height)

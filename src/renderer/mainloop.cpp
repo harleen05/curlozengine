@@ -5,10 +5,9 @@
  */
 #include "renderer/mainloop.hpp"
 #include "core/logs.hpp"
-#include "renderer/cleaners.hpp"
 #include "renderer/image.hpp"
-#include "renderer/initializers.hpp"
-#include "renderer/swapchaincontext.hpp"
+#include "renderer/renderer.hpp"
+#include "renderer/test.hpp"
 #include "renderer/variables.hpp"
 
 namespace clz::renderer
@@ -18,9 +17,6 @@ namespace clz::renderer
 		if (vkWaitForFences(renderer::r_deviceContext.device, 1, &fence, VK_TRUE,
 				    UINT64_MAX) != VK_SUCCESS) [[unlikely]]
 			clz::log::error("failed to wait for fence");
-
-		if (vkResetFences(r_deviceContext.device, 1, &fence) != VK_SUCCESS) [[unlikely]]
-			clz::log::error("Failed to reset fence");
 	}
 
 	void acquireNextImage(VkSemaphore semaphore, uint32_t& rImageIndex)
@@ -31,8 +27,7 @@ namespace clz::renderer
 		if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR || acquireResult == VK_SUBOPTIMAL_KHR)
 		    [[unlikely]]
 		{
-			clz::log::warn("Swapchain is outdated, recreating it");
-			recreateSwapchain();
+			r_recreateSwapchain = true;
 		}
 		else if (acquireResult != VK_SUCCESS) [[unlikely]]
 		{
@@ -40,15 +35,11 @@ namespace clz::renderer
 		}
 	}
 
-	void recreateSwapchain()
+	void resetFence(VkFence fence)
 	{
-		vkDeviceWaitIdle(r_deviceContext.device);
-
-		destroySwapchainContext();
-		auto swapchainResult = initSwapchainContext();
-		if (!swapchainResult) [[unlikely]]
+		if (vkResetFences(r_deviceContext.device, 1, &fence) != VK_SUCCESS) [[unlikely]]
 		{
-			clz::log::error("Mid loop, failed to recreate swapchain");
+			clz::log::error("Failed to reset fence");
 		}
 	}
 
@@ -105,8 +96,11 @@ namespace clz::renderer
 
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
 				  r_pipelineContext.pipeline);
+		const VkBuffer vertexBuffers[] = {vertexBuffer};
+		constexpr VkDeviceSize offsets[] = {0};
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
-		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+		vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
 
 		vkCmdEndRendering(commandBuffer);
 
@@ -163,10 +157,11 @@ namespace clz::renderer
 						   .pSwapchains = &r_swapchainContext.swapchain,
 						   .pImageIndices = &imageIndex};
 
-		if (vkQueuePresentKHR(r_deviceContext.presentQueue, &presentInfo) != VK_SUCCESS)
-		    [[unlikely]]
-		{
-			clz::log::error("renderer/mainloop: vkQueuePresent failed");
-		}
+		if (const VkResult result =
+			vkQueuePresentKHR(r_deviceContext.presentQueue, &presentInfo);
+		    result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) [[unlikely]]
+			r_recreateSwapchain = true;
+		else if (result != VK_SUCCESS) [[unlikely]]
+			clz::log::error("present failed");
 	}
 } // namespace clz::renderer

@@ -9,6 +9,8 @@
 #include "renderer/cleaners.hpp"
 #include "renderer/initializers.hpp"
 #include "renderer/mainloop.hpp"
+#include "renderer/swapchaincontext.hpp"
+#include "renderer/test.hpp"
 #include "renderer/variables.hpp"
 
 namespace clz::renderer
@@ -40,20 +42,35 @@ namespace clz::renderer
 		}
 
 		clz::log::debug("initialized all renderer context's");
+
+		// TEST
+		createVertexBuffer();
+		// TEST
 	}
 
 	void update(const float deltaTime)
 	{
+		if (r_recreateSwapchain) [[unlikely]]
+		{
+			clz::log::warn("swapchain out of date, recreating it");
+			recreateSwapchainContext();
+			r_recreateSwapchain = false;
+		}
 		waitForGPU(r_frameContext.inFlightFences[r_currentFrame]);
-		acquireNextImage(r_frameContext.imageAvailableSemaphores[r_currentFrame],
+		acquireNextImage(r_frameContext.renderReadySemaphores[r_currentFrame],
 				 r_imageIndex);
-		startCommandBuffer(r_frameContext.commandBuffer[r_imageIndex]);
-		recordCommandBuffer(r_frameContext.commandBuffer[r_imageIndex], r_imageIndex);
-		submitCommandBuffer(r_frameContext.commandBuffer[r_imageIndex],
-				    r_frameContext.imageAvailableSemaphores[r_currentFrame],
-				    r_frameContext.renderFinishedSemaphores[r_imageIndex],
+		if (r_recreateSwapchain) [[unlikely]]
+			return;
+		resetFence(r_frameContext.inFlightFences[r_currentFrame]);
+
+		startCommandBuffer(r_frameContext.commandBuffer[r_currentFrame]);
+		recordCommandBuffer(r_frameContext.commandBuffer[r_currentFrame], r_imageIndex);
+		submitCommandBuffer(r_frameContext.commandBuffer[r_currentFrame],
+				    r_frameContext.renderReadySemaphores[r_currentFrame],
+				    r_frameContext.presentReadySemaphores[r_imageIndex],
 				    r_frameContext.inFlightFences[r_currentFrame]);
-		present(r_frameContext.renderFinishedSemaphores[r_imageIndex], r_imageIndex);
+
+		present(r_frameContext.presentReadySemaphores[r_imageIndex], r_imageIndex); // Internally can also r_recreateSwapchain = true
 
 		r_currentFrame = (r_currentFrame + 1) % FRAMES_IN_FLIGHT;
 	}
@@ -61,6 +78,10 @@ namespace clz::renderer
 	void shutdown()
 	{
 		vkDeviceWaitIdle(r_deviceContext.device);
+
+		// TEST
+		destroyVertexBuffer();
+		// TEST
 
 		destroyFrameContext();
 		destroyPipelineContext();

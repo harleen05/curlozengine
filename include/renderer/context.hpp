@@ -101,9 +101,9 @@ namespace clz::renderer
 	{
 		VkCommandPool commandPool = VK_NULL_HANDLE;	 ///< Command pool
 		std::vector<VkCommandBuffer> commandBuffer = {}; ///< Command buffers per image
-		std::vector<VkSemaphore> imageAvailableSemaphores =
+		std::vector<VkSemaphore> renderReadySemaphores =
 		    {}; ///< Signals image acquisition
-		std::vector<VkSemaphore> renderFinishedSemaphores =
+		std::vector<VkSemaphore> presentReadySemaphores =
 		    {};					  ///< Signals rendering completion
 		std::vector<VkFence> inFlightFences = {}; ///< CPU-GPU synchronization fences
 	};

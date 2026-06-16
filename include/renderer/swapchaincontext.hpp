@@ -19,6 +19,17 @@ namespace clz::renderer
 	std::expected<void, std::string> createSwapchain();
 
 	/**
+	 * @brief Recreates the swapchain.
+	 *
+	 * Called when the swapchain becomes invalid
+	 * Destroys and rebuilds the whole swapchain context
+	 *
+	 * @note window subsystem also calls it internally
+	 * whenever window is resized
+	 */
+	void recreateSwapchainContext();
+
+	/**
 	 * @brief Destroys the all the handles in
 	 * the swapchain context
 	 */

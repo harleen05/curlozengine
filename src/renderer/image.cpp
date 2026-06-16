@@ -7,8 +7,7 @@
 
 namespace clz::renderer
 {
-	void transition_image_layout(const VkImage image,
-				     const VkImageLayout oldLayout,
+	void transition_image_layout(const VkImage image, const VkImageLayout oldLayout,
 				     const VkImageLayout newLayout,
 				     const VkAccessFlags2 src_access_mask,
 				     const VkAccessFlags2 dst_access_mask,
