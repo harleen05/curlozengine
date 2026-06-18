@@ -1,27 +1,27 @@
 # Curloz Engine
 
-A Vulkan 1.3 game engine written in C++17. 
+A Vulkan 1.3 game engine written in C++23. 
 
-> This README is for contributors and maintainers. If you're just browsing, check out [VKLearn](https://vklearn.org) for the Vulkan tutorials that came out of building this.
-
----
 
 ## Tech Stack
 
 | System | Library |
 |---|---|
-| Renderer | Vulkan 1.3 (dynamic rendering) |
+| Renderer | Vulkan 1.3 |
 | Windowing | GLFW |
-| ECS | EnTT* |
+| ECS | # |
 | Physics | Jolt Physics* |
 | Audio | OpenAL Soft* |
-| Math | GLM* |
+| Math | # |
 | Model Loading | fastgltf* |
 | Animation | ozz-animation* |
 | Build System | CMake + Ninja |
 
 ---
-> '*' Signifies that system is planned and has not yet been implemented yet
+> '#' Signifies that no external library is used and is self authorized
+> '*' Signifies that system is planned and has not yet been implemented yet, or needs further work
+---
+
 ## Prerequisites
 
 ### Linux
@@ -29,7 +29,7 @@ A Vulkan 1.3 game engine written in C++17.
 - CMake 3.25+
 - Ninja
 - clang-format (for code style enforcement)
-- GCC or Clang with C++17 support
+- GCC or Clang with C++23 support
 
 On Gentoo:
 ```bash
@@ -45,7 +45,7 @@ sudo apt install cmake ninja-build clang-format vulkan-tools libvulkan-dev
 - CMake 3.25+
 - Ninja
 - Vulkan SDK from [lunarg.com](https://vulkan.lunarg.com)
-- MSVC or MinGW with C++17 support
+- MSVC or MinGW with C++23 support
 
 ---
 
@@ -60,11 +60,11 @@ cd curloz-engine
 git submodule update --init --recursive
 
 # Configure and build
-cmake -B build -G Ninja
-cmake --build build
+cmake -B build/debug -G Ninja
+cmake --build build/debug
 ```
 
-Binary lands at `build/CurlozEngine`.
+Binary lands at `build/debug/CurlozEngine`.
 
 ---
 
@@ -77,17 +77,22 @@ curloz-engine/
 ├── shaders/            # GLSL shaders, compiled to .spv
 ├── assets/             # Models, textures, audio
 ├── external/           # Git submodules (do not modify manually)
-│   ├── glfw/
-│   ├── entt/
-│   └── jolt/
-├── .clang-format
-├── .editorconfig
-├── CMakeLists.txt
-└── LICENSE
+├── core/               # Utility functions, basically helpers used in entire engine
+├── .clang-format	# clang-format configuration
+├── .editorconfig	# editorconfig configuration
+├── CMakeLists.txt	# CMake build configuration
+└── LICENSE		# License file
 ```
 
 ---
 
+## Want to Contribute?
+
+Contributors are always welcome! If you feel there is any issue, or think there's something that can either be added or be better, feel free to open an issue or submit a pull request.
+
+If you think can handle a subsystem for long term, feel free to approach and it will be assigned to you.
+
+For More details, see the [CONTRIBUTING.md](CONTRIBUTING.md) file.
 
 ## License
 
