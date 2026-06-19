@@ -103,7 +103,7 @@ namespace clz::renderer
 		uint32_t imageCount = capabilities.minImageCount + 1;
 		if (imageCount > capabilities.maxImageCount && capabilities.maxImageCount > 0)
 			imageCount = capabilities.maxImageCount;
-		clz::log::debug("imageCount set to: " + std::to_string(imageCount));
+		clz::log::debug("max image count: " + std::to_string(imageCount));
 
 		VkSwapchainCreateInfoKHR swapchainInfo = {};
 		swapchainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -149,7 +149,7 @@ namespace clz::renderer
 
 		// retrieving image views
 		r_swapchainContext.imageViews.resize(r_swapchainContext.images.size());
-		for (int i = 0; i < r_swapchainContext.images.size(); ++i)
+		for (size_t i = 0; i < r_swapchainContext.images.size(); ++i)
 		{
 			VkImageViewCreateInfo imageViewInfo = {};
 			imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -175,7 +175,7 @@ namespace clz::renderer
 			}
 		}
 
-		clz::log::debug("renderer: created swapchain");
+		clz::log::info("renderer: created swapchain");
 		return {};
 	}
 
@@ -199,6 +199,6 @@ namespace clz::renderer
 		vkDestroySwapchainKHR(r_deviceContext.device, r_swapchainContext.swapchain,
 				      nullptr);
 
-		clz::log::debug("renderer: destroyed swapchain context");
+		clz::log::info("renderer: destroyed swapchain context");
 	}
 } // namespace clz::renderer

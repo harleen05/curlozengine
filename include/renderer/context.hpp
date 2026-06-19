@@ -99,10 +99,9 @@ namespace clz::renderer
 	 */
 	struct FrameContext
 	{
-		VkCommandPool commandPool = VK_NULL_HANDLE;	 ///< Command pool
-		std::vector<VkCommandBuffer> commandBuffer = {}; ///< Command buffers per image
-		std::vector<VkSemaphore> renderReadySemaphores =
-		    {}; ///< Signals image acquisition
+		VkCommandPool commandPool = VK_NULL_HANDLE;	     ///< Command pool
+		std::vector<VkCommandBuffer> commandBuffer = {};     ///< Command buffers per image
+		std::vector<VkSemaphore> renderReadySemaphores = {}; ///< Signals image acquisition
 		std::vector<VkSemaphore> presentReadySemaphores =
 		    {};					  ///< Signals rendering completion
 		std::vector<VkFence> inFlightFences = {}; ///< CPU-GPU synchronization fences

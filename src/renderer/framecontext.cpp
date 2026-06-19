@@ -37,8 +37,7 @@ namespace clz::renderer
 		allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 		allocateInfo.commandBufferCount = FRAMES_IN_FLIGHT;
 
-		r_frameContext.commandBuffer.resize(
-		    static_cast<size_t>(FRAMES_IN_FLIGHT));
+		r_frameContext.commandBuffer.resize(static_cast<size_t>(FRAMES_IN_FLIGHT));
 
 		if (vkAllocateCommandBuffers(r_deviceContext.device, &allocateInfo,
 					     r_frameContext.commandBuffer.data()) != VK_SUCCESS)
@@ -55,8 +54,7 @@ namespace clz::renderer
 	std::expected<void, std::string> createSyncObjects()
 	{
 
-		r_frameContext.renderReadySemaphores.resize(
-		    static_cast<size_t>(FRAMES_IN_FLIGHT));
+		r_frameContext.renderReadySemaphores.resize(static_cast<size_t>(FRAMES_IN_FLIGHT));
 		r_frameContext.inFlightFences.resize(static_cast<size_t>(FRAMES_IN_FLIGHT));
 		for (size_t i = 0; i < FRAMES_IN_FLIGHT; ++i)
 		{
@@ -88,8 +86,7 @@ namespace clz::renderer
 			VkSemaphoreCreateInfo semaphoreInfo = {};
 			semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 			if (vkCreateSemaphore(r_deviceContext.device, &semaphoreInfo, nullptr,
-					      &semaphore) !=
-			    VK_SUCCESS)
+					      &semaphore) != VK_SUCCESS)
 			{
 				clz::log::error("Could not create semaphores");
 				return std::unexpected("Could not create semaphores");
@@ -110,8 +107,7 @@ namespace clz::renderer
 	{
 		for (const auto semaphore : r_frameContext.renderReadySemaphores)
 		{
-			vkDestroySemaphore(r_deviceContext.device, semaphore,
-					   nullptr);
+			vkDestroySemaphore(r_deviceContext.device, semaphore, nullptr);
 		}
 
 		for (const auto inFlightFence : r_frameContext.inFlightFences)
@@ -121,8 +117,7 @@ namespace clz::renderer
 
 		for (const auto semaphore : r_frameContext.presentReadySemaphores)
 		{
-			vkDestroySemaphore(r_deviceContext.device, semaphore,
-					   nullptr);
+			vkDestroySemaphore(r_deviceContext.device, semaphore, nullptr);
 		}
 
 		clz::log::info("destroyed semaphores and fences");

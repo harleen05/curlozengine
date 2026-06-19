@@ -31,7 +31,9 @@ namespace clz::math
 		};
 
 		/// @brief Initializes all components to zero.
-		vec4() : xmm(_mm_setzero_ps()) {}
+		vec4() : xmm(_mm_setzero_ps())
+		{
+		}
 
 		/**
 		 * @brief Constructs a vec4 from four float values.
@@ -41,13 +43,17 @@ namespace clz::math
 		 * @param w W component.
 		 */
 		vec4(const float x, const float y, const float z, const float w)
-		    : xmm(_mm_set_ps(w, z, y, x)) {}
+		    : xmm(_mm_set_ps(w, z, y, x))
+		{
+		}
 
 		/**
 		 * @brief Constructs a vec4 directly from a __m128 register.
 		 * @param xmm Source SSE register.
 		 */
-		vec4(const __m128 xmm) : xmm(xmm) {}
+		vec4(const __m128 xmm) : xmm(xmm)
+		{
+		}
 
 		/**
 		 * @brief operator overloaded Component-wise addition of two vec4s.

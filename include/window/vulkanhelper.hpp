@@ -6,10 +6,10 @@
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include <vulkan/vulkan.h>
 #include <expected>
 #include <string>
 #include <vector>
+#include <vulkan/vulkan.h>
 
 namespace clz::window
 {

@@ -35,6 +35,16 @@ namespace clz::math
 		vec3(const float x, const float y, const float z) : x(x), y(y), z(z) {}
 
 		/**
+		 * @brief Constructs a vec3 
+		 * with x y z all set to a single float value
+		 * @param x X component.
+		 * @param y Y component.
+		 * @param z Z component.
+		 */
+		vec3(const float value) : x(value), y(value), z(value) {}
+
+
+		/**
 		 * @brief Constructs a vec3 directly from a __m128 register.
 		 * @param xmm Source SSE register.
 		 */
@@ -82,7 +92,7 @@ namespace clz::math
 	 */
 	inline vec3 scalar_product(const vec3& lhs, const float scalar)
 	{
-		return vec3(lhs.x*scalar, lhs.y*scalar, lhs.z*scalar);
+		return vec3(lhs.x * scalar, lhs.y * scalar, lhs.z * scalar);
 	}
 
 	/**
@@ -93,7 +103,7 @@ namespace clz::math
 	 */
 	inline vec3 component_product(const vec3& lhs, const vec3& rhs)
 	{
-		return vec3(lhs.x*rhs.x, lhs.y*rhs.y, lhs.z*rhs.z);
+		return vec3(lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z);
 	}
 
 	/**
@@ -104,7 +114,7 @@ namespace clz::math
 	 */
 	inline float dot_product(const vec3& lhs, const vec3& rhs)
 	{
-		return lhs.x*rhs.x + lhs.y*rhs.y + lhs.z*rhs.z;
+		return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z;
 	}
 
 	/**

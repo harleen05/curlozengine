@@ -122,7 +122,6 @@ namespace clz::renderer
 
 		// TEST START
 
-		createVertexBuffer();
 		auto bindingDescription = getVertexBindingDescription();
 		auto attributeDescriptions = getVertexAttributeDescriptions();
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo = {
@@ -165,8 +164,8 @@ namespace clz::renderer
 		rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 		// rasterizer.depthClampEnable = VK_FALSE;
 		rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-		// rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-		// rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+		rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+		rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
 		// rasterizer.depthBiasEnable = VK_FALSE;
 		rasterizer.lineWidth = 1.0f;
 
@@ -187,7 +186,8 @@ namespace clz::renderer
 		colorBlending.attachmentCount = 1;
 		colorBlending.pAttachments = &colorBlendAttachment;
 
-		createDescriptorSetLayout();
+		// TEST
+
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipelineLayoutInfo.setLayoutCount = 1;
@@ -198,6 +198,7 @@ namespace clz::renderer
 			clz::log::error("Could not create pipeline layout");
 			return std::unexpected("could not create pipeline");
 		}
+		// TEST
 
 		VkPipelineRenderingCreateInfo pipelineRenderingCI = {};
 		pipelineRenderingCI.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
@@ -238,9 +239,6 @@ namespace clz::renderer
 	{
 		vkDestroyPipeline(r_deviceContext.device, r_pipelineContext.pipeline, nullptr);
 		vkDestroyPipelineLayout(r_deviceContext.device, r_pipelineContext.layout, nullptr);
-		// TEST
-		destroyVertexBuffer();
-		// TEST
 
 		vkDestroyShaderModule(r_deviceContext.device, r_pipelineContext.vertexShader,
 				      nullptr);

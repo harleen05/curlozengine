@@ -29,15 +29,23 @@ namespace clz::renderer
 			return;
 		}
 
-		if (auto pipelineContextResult = initPipelineContext(); !pipelineContextResult)
-		{
-			clz::log::error(pipelineContextResult.error());
-			return;
-		}
-
 		if (auto frameContextResult = initFrameContext(); !frameContextResult)
 		{
 			clz::log::error(frameContextResult.error());
+			return;
+		}
+
+		// TEST
+		createVertexBuffer();
+		createUniformBuffer();
+		createDescriptorPool();
+		createDescriptorSetLayout();
+		createDescriptorSets();
+		// TEST
+
+		if (auto pipelineContextResult = initPipelineContext(); !pipelineContextResult)
+		{
+			clz::log::error(pipelineContextResult.error());
 			return;
 		}
 
@@ -59,6 +67,10 @@ namespace clz::renderer
 			return;
 		resetFence(r_frameContext.inFlightFences[r_currentFrame]);
 
+		// TEST
+		updateUniformBuffer(r_currentFrame);
+		// TEST
+
 		startCommandBuffer(r_frameContext.commandBuffer[r_currentFrame]);
 		recordCommandBuffer(r_frameContext.commandBuffer[r_currentFrame], r_imageIndex);
 		submitCommandBuffer(r_frameContext.commandBuffer[r_currentFrame],
@@ -66,7 +78,8 @@ namespace clz::renderer
 				    r_frameContext.presentReadySemaphores[r_imageIndex],
 				    r_frameContext.inFlightFences[r_currentFrame]);
 
-		present(r_frameContext.presentReadySemaphores[r_imageIndex], r_imageIndex); // Internally can also r_recreateSwapchain = true
+		present(r_frameContext.presentReadySemaphores[r_imageIndex],
+			r_imageIndex); // Internally can also r_recreateSwapchain = true
 
 		r_currentFrame = (r_currentFrame + 1) % FRAMES_IN_FLIGHT;
 	}
@@ -75,8 +88,15 @@ namespace clz::renderer
 	{
 		vkDeviceWaitIdle(r_deviceContext.device);
 
-		destroyFrameContext();
 		destroyPipelineContext();
+		destroyFrameContext();
+		// TEST
+		destroyDescriptorSetLayout();
+		destroyDescriptorPool();
+		destroyUniformBuffer();
+		destroyVertexBuffer();
+		// TEST
+
 		destroySwapchainContext();
 		destroyDeviceContext();
 

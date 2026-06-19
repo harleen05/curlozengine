@@ -23,14 +23,18 @@ namespace clz::math
 		float x, y;
 
 		/// @brief Initializes all components to zero.
-		vec2() : x(0.0f), y(0.0f) {}
+		vec2() : x(0.0f), y(0.0f)
+		{
+		}
 
 		/**
 		 * @brief Constructs a vec2 from two float values.
 		 * @param x X component.
 		 * @param y Y component.
 		 */
-		vec2(const float x, const float y) : x(x), y(y) {}
+		vec2(const float x, const float y) : x(x), y(y)
+		{
+		}
 
 		/**
 		 * @brief Constructs a vec2 directly from a __m128 register.
@@ -52,7 +56,7 @@ namespace clz::math
 	 */
 	inline vec2 add(const vec2& lhs, const vec2& rhs)
 	{
-		return vec2(lhs.x+rhs.x, lhs.y+rhs.y);
+		return vec2(lhs.x + rhs.x, lhs.y + rhs.y);
 	}
 
 	/**
@@ -63,7 +67,7 @@ namespace clz::math
 	 */
 	inline vec2 subtract(const vec2& lhs, const vec2& rhs)
 	{
-		return vec2(lhs.x-rhs.x, lhs.y-rhs.y);
+		return vec2(lhs.x - rhs.x, lhs.y - rhs.y);
 	}
 
 	/**
@@ -74,7 +78,7 @@ namespace clz::math
 	 */
 	inline vec2 scalar_product(const vec2& lhs, const float scalar)
 	{
-		return vec2(lhs.x*scalar, lhs.y*scalar);
+		return vec2(lhs.x * scalar, lhs.y * scalar);
 	}
 
 	/**
@@ -85,7 +89,7 @@ namespace clz::math
 	 */
 	inline vec2 component_product(const vec2& lhs, const vec2& rhs)
 	{
-		return vec2(lhs.x*rhs.x, lhs.y*rhs.y);
+		return vec2(lhs.x * rhs.x, lhs.y * rhs.y);
 	}
 
 	/**
@@ -97,7 +101,7 @@ namespace clz::math
 	inline float dot_product(const vec2& lhs, const vec2& rhs)
 	{
 		// 0x31 = 0011 0001 — multiply xy only, store in slot 0
-		return lhs.x*rhs.x + lhs.y*rhs.y;
+		return lhs.x * rhs.x + lhs.y * rhs.y;
 	}
 
 	/**

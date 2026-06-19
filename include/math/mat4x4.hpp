@@ -7,22 +7,22 @@
  */
 #pragma once
 
+#include "vec3.hpp"
 #include <immintrin.h>
 #include <xmmintrin.h>
-#include "vec3.hpp"
 
 namespace clz::math
 {
 	/**
 	 * @brief 16-component float vector backed by 4 128-bit SSE register.
 	 *
-	 * It's not recommented to access matrix data directly	
+	 * It's not recommented to access matrix data directly
 	 * All instances are 16-byte aligned for safe use with aligned SSE loads/stores.
 	 */
-        struct alignas(16) mat4
-        {
-                union {
-			struct 
+	struct alignas(16) mat4
+	{
+		union {
+			struct
 			{
 				__m128 r0;
 				__m128 r1;
@@ -30,34 +30,36 @@ namespace clz::math
 				__m128 r3;
 			};
 
-                        struct
-                        {
-                                float xx, xy, xz, xw;
-                                float yx, yy, yz, yw;
-                                float zx, zy, zz, zw;
-                                float wx, wy, wz, ww;
-                        };
+			struct
+			{
+				float xx, xy, xz, xw;
+				float yx, yy, yz, yw;
+				float zx, zy, zz, zw;
+				float wx, wy, wz, ww;
+			};
 
 			float data[16];
-                };
+		};
 
-                mat4(): r0(_mm_setzero_ps()),
-			r1(_mm_setzero_ps()),
-			r2(_mm_setzero_ps()),
-			r3(_mm_setzero_ps()) {}
-
+		mat4()
+		    : r0(_mm_setzero_ps()), r1(_mm_setzero_ps()), r2(_mm_setzero_ps()),
+		      r3(_mm_setzero_ps())
+		{
+		}
 
 		/// @brief Initializes Matrix in an identity format
-                mat4(float value):
-			r0(_mm_set_ps(0.0f, 0.0f, 0.0f, value)),
-			r1(_mm_set_ps(0.0f, 0.0f, value, 0.0f)),
-			r2(_mm_set_ps(0.0f, value, 0.0f, 0.0f)),
-			r3(_mm_set_ps(value, 0.0f, 0.0f, 0.0f)) {}
-
+		mat4(float value)
+		    : r0(_mm_set_ps(0.0f, 0.0f, 0.0f, value)),
+		      r1(_mm_set_ps(0.0f, 0.0f, value, 0.0f)),
+		      r2(_mm_set_ps(0.0f, value, 0.0f, 0.0f)),
+		      r3(_mm_set_ps(value, 0.0f, 0.0f, 0.0f))
+		{
+		}
 
 		/// @brief Initializes the 4 __m128 registers
-                mat4(__m128 r0, __m128 r1, __m128 r2, __m128 r3): 
-				r0(r0), r1(r1), r2(r2), r3(r3) {}
+		mat4(__m128 r0, __m128 r1, __m128 r2, __m128 r3) : r0(r0), r1(r1), r2(r2), r3(r3)
+		{
+		}
 
 		/**
 		 * @brief Returns Addition of two matrices
@@ -69,7 +71,7 @@ namespace clz::math
 		inline mat4 operator+(const mat4& mat) const
 		{
 			mat4 result(r0, r1, r2, r3);
-			
+
 			_mm_add_ps(result.r0, mat.r0);
 			_mm_add_ps(result.r1, mat.r1);
 			_mm_add_ps(result.r2, mat.r2);
@@ -80,7 +82,7 @@ namespace clz::math
 
 		/**
 		 * @brief Multiplies the matrix with a scalar
-		 * @param m1 matrix 
+		 * @param m1 matrix
 		 * @param scalar float value
 		 * @return resulting matrix
 		 */
@@ -137,12 +139,11 @@ namespace clz::math
 			return result;
 		}
 
-
 		/**
 		 * @brief Adds two matrices
-		 * @param 
+		 * @param
 		 */
-        };
+	};
 
 	/**
 	 * @brief Multiplies the matrix with a scalar
@@ -170,10 +171,10 @@ namespace clz::math
 	 * @return Sum of m1 and m1 matrices
 	 * Takes roughly ~15-20 cycles
 	 */
-        inline mat4 add(const mat4& m1, const mat4& m2)
-        {
+	inline mat4 add(const mat4& m1, const mat4& m2)
+	{
 		return m1 + m2;
-        }
+	}
 
 	/**
 	 * @brief Multiplies two given matrices
@@ -188,4 +189,4 @@ namespace clz::math
 		return m1 * m2;
 	}
 
-}
+} // namespace clz::math

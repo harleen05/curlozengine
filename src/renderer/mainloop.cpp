@@ -9,6 +9,7 @@
 #include "renderer/renderer.hpp"
 #include "renderer/test.hpp"
 #include "renderer/variables.hpp"
+#include <vulkan/vulkan_core.h>
 
 namespace clz::renderer
 {
@@ -68,6 +69,7 @@ namespace clz::renderer
 
 		const VkRenderingAttachmentInfoKHR colorAttachment{
 		    .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR,
+		    .pNext = nullptr,
 		    .imageView = r_swapchainContext.imageViews[imageIndex],
 		    .imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 		    .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
@@ -75,6 +77,8 @@ namespace clz::renderer
 		    .clearValue = {{0.0f, 0.0f, 0.0f, 1.0f}}};
 		const VkRenderingInfoKHR renderingInfo{
 		    .sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR,
+		    .pNext = nullptr,
+		    .flags = 0,
 		    .renderArea = {{0, 0}, r_swapchainContext.extent},
 		    .layerCount = 1,
 		    .colorAttachmentCount = 1,
@@ -100,6 +104,9 @@ namespace clz::renderer
 		constexpr VkDeviceSize offsets[] = {0};
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+					clz::renderer::r_pipelineContext.layout, 0, 1,
+					&descriptorSets[r_currentFrame], 0, nullptr);
 		vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
 
 		vkCmdEndRendering(commandBuffer);
@@ -120,26 +127,40 @@ namespace clz::renderer
 				 VkSemaphore renderFinishedSemaphore, VkFence inFlightFence)
 	{
 		const VkSemaphoreSubmitInfoKHR waitSemaphore{
-		    .sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO_KHR,
-		    .semaphore = imageAvailableSemaphore,
-		    .stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT_KHR};
+			.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO_KHR,
+			.pNext = nullptr,
+			.semaphore = imageAvailableSemaphore,
+			.value = 0,
+			.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT_KHR,
+			.deviceIndex = 0
+		};
+
 
 		const VkSemaphoreSubmitInfoKHR signalSemaphore{
-		    .sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO_KHR,
-		    .semaphore = renderFinishedSemaphore,
-		    .stageMask = VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT_KHR};
+			.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO_KHR,
+			.pNext = nullptr,
+			.semaphore = renderFinishedSemaphore,
+			.value = 0,
+			.stageMask = VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT_KHR,
+			.deviceIndex = 0
+		};
+
 
 		VkCommandBufferSubmitInfoKHR cmdSubmitInfo{};
 		cmdSubmitInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO_KHR;
 		cmdSubmitInfo.commandBuffer = commandBuffer;
 
-		const VkSubmitInfo2KHR submitInfo{.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2_KHR,
-						  .waitSemaphoreInfoCount = 1,
-						  .pWaitSemaphoreInfos = &waitSemaphore,
-						  .commandBufferInfoCount = 1,
-						  .pCommandBufferInfos = &cmdSubmitInfo,
-						  .signalSemaphoreInfoCount = 1,
-						  .pSignalSemaphoreInfos = &signalSemaphore};
+		const VkSubmitInfo2KHR submitInfo{
+			.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2_KHR,
+			.pNext = nullptr,
+			.flags = 0,
+			.waitSemaphoreInfoCount = 1,
+			.pWaitSemaphoreInfos = &waitSemaphore,
+			.commandBufferInfoCount = 1,
+			.pCommandBufferInfos = &cmdSubmitInfo,
+			.signalSemaphoreInfoCount = 1,
+			.pSignalSemaphoreInfos = &signalSemaphore
+		};
 
 		if (vkQueueSubmit2(r_deviceContext.graphicsQueue, 1, &submitInfo, inFlightFence) !=
 		    VK_SUCCESS) [[unlikely]]
@@ -150,15 +171,15 @@ namespace clz::renderer
 
 	void present(VkSemaphore semaphore, uint32_t imageIndex)
 	{
-		const VkPresentInfoKHR presentInfo{.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
-						   .waitSemaphoreCount = 1,
-						   .pWaitSemaphores = &semaphore,
-						   .swapchainCount = 1,
-						   .pSwapchains = &r_swapchainContext.swapchain,
-						   .pImageIndices = &imageIndex};
+		VkPresentInfoKHR presentInfo = {};
+		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+		presentInfo.waitSemaphoreCount = 1;
+		presentInfo.pWaitSemaphores = &semaphore;
+		presentInfo.swapchainCount = 1;
+		presentInfo.pSwapchains = &r_swapchainContext.swapchain,
+		presentInfo.pImageIndices = &imageIndex;
 
-		if (const VkResult result =
-			vkQueuePresentKHR(r_deviceContext.presentQueue, &presentInfo);
+		if (const VkResult result = vkQueuePresentKHR(r_deviceContext.presentQueue, &presentInfo);
 		    result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) [[unlikely]]
 			r_recreateSwapchain = true;
 		else if (result != VK_SUCCESS) [[unlikely]]
