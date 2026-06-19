@@ -6,6 +6,7 @@
 #include "math/mat4x4.hpp"
 #include "math/vec2.hpp"
 #include "math/vec3.hpp"
+#include "math/vec4.hpp"
 #include "renderer/variables.hpp"
 #include <array>
 #include <cstdint>
@@ -184,7 +185,13 @@ struct UniformBufferObject
 {
 	clz::math::mat4 model;
 };
+struct Color 
+{
+	clz::math::vec4 color;
+};
+
 inline UniformBufferObject UBO;
+inline Color UBO_COLOR;
 
 inline void createDescriptorSetLayout()
 {
@@ -194,10 +201,18 @@ inline void createDescriptorSetLayout()
 	uboLayoutBinding.descriptorCount = 1;
 	uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
+	VkDescriptorSetLayoutBinding colorLayoutBinding = {};
+	colorLayoutBinding.binding = 1;
+	colorLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	colorLayoutBinding.descriptorCount = 1;
+	colorLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+
+	std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, colorLayoutBinding};
 	VkDescriptorSetLayoutCreateInfo layoutInfo = {};
 	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	layoutInfo.bindingCount = 1;
-	layoutInfo.pBindings = &uboLayoutBinding;
+	layoutInfo.bindingCount = bindings.size();
+	layoutInfo.pBindings = bindings.data();
 
 	if (vkCreateDescriptorSetLayout(clz::renderer::r_deviceContext.device, &layoutInfo, nullptr,
 					&descriptorSetLayout) != VK_SUCCESS)
@@ -212,8 +227,7 @@ inline void createUniformBuffer()
 	for (size_t i = 0; i < fif; i++)
 	{
 		createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-			     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-				 VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
 			     uniformBuffers[i], uniformBuffersMemory[i]);
 
 		vkMapMemory(clz::renderer::r_deviceContext.device, uniformBuffersMemory[i], 0,
