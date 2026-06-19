@@ -61,18 +61,22 @@ namespace clz::renderer
 		for (size_t i = 0; i < FRAMES_IN_FLIGHT; ++i)
 		{
 			VkSemaphoreCreateInfo semaphoreInfo{
-			    .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+				.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+				.pNext = nullptr,
+				.flags = 0
 			};
 			if (vkCreateSemaphore(r_deviceContext.device, &semaphoreInfo, nullptr,
-					      &r_frameContext.imageAvailableSemaphores[i]) !=
-			    VK_SUCCESS)
+				&r_frameContext.imageAvailableSemaphores[i]) != VK_SUCCESS)
 			{
 				clz::log::error("renderer: Could not create semaphores");
 				return std::unexpected("renderer: Could not create semaphores");
 			}
 
-			VkFenceCreateInfo fenceInfo{.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
-						    .flags = VK_FENCE_CREATE_SIGNALED_BIT};
+			VkFenceCreateInfo fenceInfo{
+				.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+				.pNext = nullptr,		    
+				.flags = VK_FENCE_CREATE_SIGNALED_BIT
+			};
 			if (vkCreateFence(r_deviceContext.device, &fenceInfo, nullptr,
 					  &r_frameContext.inFlightFences[i]) != VK_SUCCESS)
 			{

@@ -4,10 +4,10 @@
  * @brief Core Vulkan context structures used by the renderer.
  *
  * Defines the main data containers for managing Vulkan resources:
- * - Device (instance, GPU, queues)
- * - Swapchain (images, format, extent)
- * - Pipeline (shaders, pipeline state)
- * - Frame (per-frame synchronization and command buffers)
+ * 1. Device (instance, GPU, queues)
+ * 2. Swapchain (images, format, extent)
+ * 3. Pipeline (shaders, pipeline state)
+ * 4. Frame (per-frame synchronization and command buffers)
  *
  * @note These are plain data structures with no ownership logic.
  * Creation and destruction are handled by initializer/cleaner modules.
@@ -35,15 +35,15 @@ namespace clz::renderer
 	 */
 	struct DeviceContext
 	{
-		VkInstance instance = VK_NULL_HANDLE;			  ///< Vulkan instance
-		VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE; ///< Debug messenger
-		VkPhysicalDevice gpu = VK_NULL_HANDLE;	     ///< Selected physical device
-		VkDevice device = VK_NULL_HANDLE;	     ///< Logical device
-		VkSurfaceKHR surface = VK_NULL_HANDLE;	     ///< Window surface
-		VkQueue graphicsQueue = VK_NULL_HANDLE;	     ///< Graphics queue
-		VkQueue presentQueue = VK_NULL_HANDLE;	     ///< Presentation queue
-		std::optional<uint32_t> graphicsFamily = {}; ///< Graphics queue family index
-		std::optional<uint32_t> presentFamily = {};  ///< Present queue family index
+		VkInstance instance  			= VK_NULL_HANDLE;	///< Vulkan instance
+		VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE; 	///< Debug messenger
+		VkPhysicalDevice gpu			= VK_NULL_HANDLE; 	///< Selected physical device
+		VkDevice device 			= VK_NULL_HANDLE; 	///< Logical device
+		VkSurfaceKHR surface 			= VK_NULL_HANDLE;	///< Window surface
+		VkQueue graphicsQueue 			= VK_NULL_HANDLE;	///< Graphics queue
+		VkQueue presentQueue 			= VK_NULL_HANDLE;	///< Presentation queue
+		std::optional<uint32_t> graphicsFamily 	= {};		  	///< Graphics queue family index
+		std::optional<uint32_t> presentFamily 	= {};		  	///< Present queue family index
 	};
 
 	/**
@@ -58,12 +58,12 @@ namespace clz::renderer
 	 */
 	struct SwapchainContext
 	{
-		VkSwapchainKHR swapchain = VK_NULL_HANDLE; ///< Swapchain handle
-		VkSurfaceFormatKHR format;		   ///< Selected surface format
+		VkSwapchainKHR swapchain = VK_NULL_HANDLE;		 ///< Swapchain handle
+		VkSurfaceFormatKHR format;				 ///< Selected surface format
 		VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR; ///< Presentation mode
 		VkExtent2D extent = {};					 ///< Swapchain resolution
 		std::vector<VkImage> images = {};			 ///< Swapchain images
-		std::vector<VkImageView> imageViews = {}; ///< Image views for rendering
+		std::vector<VkImageView> imageViews = {}; 		 ///< Image views for rendering
 	};
 
 	/**
@@ -99,12 +99,10 @@ namespace clz::renderer
 	 */
 	struct FrameContext
 	{
-		VkCommandPool commandPool = VK_NULL_HANDLE;	 ///< Command pool
-		std::vector<VkCommandBuffer> commandBuffer = {}; ///< Command buffers per image
-		std::vector<VkSemaphore> imageAvailableSemaphores =
-		    {}; ///< Signals image acquisition
-		std::vector<VkSemaphore> renderFinishedSemaphores =
-		    {};					  ///< Signals rendering completion
-		std::vector<VkFence> inFlightFences = {}; ///< CPU-GPU synchronization fences
+		VkCommandPool commandPool = VK_NULL_HANDLE;	 	///< Command pool
+		std::vector<VkCommandBuffer> commandBuffer = {}; 	///< Command buffers per image
+		std::vector<VkSemaphore> imageAvailableSemaphores = {}; ///< Signals image acquisition
+		std::vector<VkSemaphore> renderFinishedSemaphores ={};	///< Signals rendering completion
+		std::vector<VkFence> inFlightFences = {}; 		///< CPU-GPU synchronization fences
 	};
 } // namespace clz::renderer
