@@ -1,7 +1,8 @@
 /**
  * @file initializers.hpp
  * @author curl0z
- * @brief Initializes all the vulkan context's
+ * @brief Contains all the functions for initializing all 
+ * renderer's contexts.
  */
 #pragma once
 

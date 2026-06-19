@@ -1,6 +1,6 @@
 /**
  * @file swapchaincontext.hpp
- * author curl0z
+ * @author curl0z
  * @brief Contains functions for initializing and
  * destroying all the handles in swapchain context.
  */
