@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Curloz Engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ── TOKENS ── */
+:root {
+  --void:   #060608;
+  --ink:    #0b0e14;
+  --panel:  #0e1117;
+  --surf:   #131a24;
+  --rim:    #1c2636;
+  --rim2:   #263344;
+  --brass:  #c8a96e;
+  --brass2: #a88848;
+  --brassf: rgba(200,169,110,.08);
+  --blue:   #3d7eff;
+  --text:   #c9d4e0;
+  --sub:    #4a5d74;
+  --faint:  #1a2230;
+  --mono:   'JetBrains Mono', monospace;
+  --body:   'Inter', system-ui, sans-serif;
+  --disp:   'Bebas Neue', sans-serif;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background:var(--void);
+  color:var(--text);
+  font-family:var(--body);
+  font-size:15px;
+  line-height:1.65;
+  overflow-x:hidden;
+}
+
+/* ── SCANLINE CANVAS ── */
+#scanlines {
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  opacity:.35;
+}
+
+/* ── NAV ── */
+nav {
+  position:fixed; top:0; left:0; right:0; z-index:200;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 48px; height:54px;
+  background:rgba(6,6,8,.85);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--rim);
+  -webkit-backdrop-filter: blur(20px); /* Safari */
+  backdrop-filter: blur(20px);         /* Chrome, Edge, Firefox */
+}
+.nav-logo {
+  font-family:var(--mono); font-size:13px; font-weight:700;
+  color:var(--text); letter-spacing:.06em;
+  display:flex; align-items:center; gap:10px;
+}
+.logo-mark {
+  width:20px; height:20px;
+  border:1px solid var(--brass);
+  display:flex; align-items:center; justify-content:center;
+  position:relative;
+}
+.logo-mark::before {
+  content:'';
+  width:8px; height:8px;
+  background:var(--brass);
+  display:block;
+}
+.nav-tabs { display:flex; }
+.nav-tab {
+  padding:6px 20px; font-size:13px; font-weight:500;
+  color:var(--sub); background:none; border:none;
+  cursor:pointer; font-family:var(--body);
+  transition:color .15s; letter-spacing:.01em;
+  position:relative;
+}
+.nav-tab::after {
+  content:''; position:absolute; bottom:-1px; left:20px; right:20px;
+  height:1px; background:var(--brass);
+  transform:scaleX(0); transition:transform .2s;
+}
+.nav-tab.active { color:var(--text); }
+.nav-tab.active::after { transform:scaleX(1); }
+.nav-tab:hover { color:var(--text); }
+
+.nav-right { display:flex; align-items:center; gap:16px; }
+.nav-gh {
+  display:flex; align-items:center; gap:7px;
+  padding:7px 16px; border-radius:2px;
+  background:transparent; border:1px solid var(--rim2);
+  font-size:12px; color:var(--sub); text-decoration:none;
+  font-family:var(--mono); letter-spacing:.04em;
+  transition:all .15s;
+}
+.nav-gh:hover { border-color:var(--brass); color:var(--brass); }
+
+.ham { display:none; flex-direction:column; gap:5px; cursor:pointer; background:none; border:none; padding:4px; }
+.ham span { display:block; width:22px; height:1.5px; background:var(--sub); transition:all .2s; }
+
+/* ── MOBILE MENU ── */
+.mob-menu {
+  display:none; position:fixed; top:54px; left:0; right:0; bottom:0;
+  background:var(--ink); z-index:190; padding:28px 24px;
+  flex-direction:column; gap:0; border-top:1px solid var(--rim);
+}
+.mob-menu.open { display:flex; }
+.mob-link {
+  padding:14px 0; font-size:15px; color:var(--sub);
+  text-decoration:none; border-bottom:1px solid var(--rim);
+  cursor:pointer; background:none; border-left:none;
+  border-right:none; border-top:none;
+  font-family:var(--body); text-align:left;
+  transition:color .15s; font-weight:500;
+}
+.mob-link:hover, .mob-link.active { color:var(--brass); }
+
+/* ── TAB PANES ── */
+.tab-pane { display:none; position:relative; z-index:1; }
+.tab-pane.active { display:block; }
+
+/* ══════════════════════════
+   HOME
+══════════════════════════ */
+.home { padding-top:54px; }
+
+/* HERO */
+.hero {
+  min-height:100svh;
+  display:grid;
+  grid-template-rows:1fr auto;
+  padding:0 48px 56px;
+  position:relative; overflow:hidden;
+}
+/* faint vertical lines */
+.hero-lines {
+  position:absolute; inset:0; pointer-events:none;
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 119px,
+    rgba(200,169,110,.04) 119px,
+    rgba(200,169,110,.04) 120px
+  );
+}
+.hero-content {
+  display:flex; flex-direction:column;
+  justify-content:flex-end;
+  padding-bottom:40px;
+  padding-top:120px;
+}
+
+.hero-kicker {
+  font-family:var(--mono); font-size:10.5px;
+  letter-spacing:.2em; text-transform:uppercase;
+  color:var(--brass); margin-bottom:16px;
+  display:flex; align-items:center; gap:12px;
+}
+.hero-kicker::before { content:'//'; opacity:.5; }
+
+.hero-title {
+  font-family:var(--disp);
+  font-size:clamp(80px, 14vw, 180px);
+  line-height:.9;
+  letter-spacing:.02em;
+  color:var(--text);
+  margin-bottom:0;
+  -webkit-user-select: none;
+  user-select:none;
+}
+.hero-title .dim { color:var(--rim2); }
+.hero-title .gold { color:var(--brass); }
+
+.hero-tagline {
+  margin-top:28px;
+  font-size:16px; color:var(--sub);
+  max-width:440px; line-height:1.7;
+  font-weight:300;
+}
+.hero-tagline strong { color:var(--text); font-weight:500; }
+
+.hero-actions { display:flex; gap:12px; margin-top:36px; flex-wrap:wrap; }
+
+.btn-solid {
+  display:inline-flex; align-items:center; gap:9px;
+  padding:11px 24px;
+  background:var(--brass); color:var(--void);
+  font-size:13px; font-weight:600; font-family:var(--body);
+  text-decoration:none; border:none; cursor:pointer;
+  letter-spacing:.02em; transition:background .15s;
+}
+.btn-solid:hover { background:var(--brass2); }
+
+.btn-ghost {
+  display:inline-flex; align-items:center; gap:9px;
+  padding:11px 24px;
+  background:transparent; color:var(--text);
+  font-size:13px; font-weight:500; font-family:var(--body);
+  text-decoration:none; border:1px solid var(--rim2);
+  cursor:pointer; letter-spacing:.02em; transition:all .15s;
+}
+.btn-ghost:hover { border-color:var(--brass); color:var(--brass); }
+
+/* HERO BOTTOM BAR */
+.hero-bar {
+  border-top:1px solid var(--rim);
+  display:flex; gap:0; overflow-x:auto;
+}
+.hero-stat {
+  flex:1; min-width:120px;
+  padding:20px 28px;
+  border-right:1px solid var(--rim);
+}
+.hero-stat:last-child { border-right:none; }
+.hs-val {
+  font-family:var(--mono); font-size:20px; font-weight:700;
+  color:var(--text); letter-spacing:-.01em;
+  display:block; margin-bottom:4px;
+}
+.hs-val em { color:var(--brass); font-style:normal; font-size:13px; }
+.hs-key {
+  font-size:10.5px; font-family:var(--mono);
+  letter-spacing:.14em; text-transform:uppercase; color:var(--sub);
+}
+
+/* SECTION BASE */
+.sec {
+  padding:100px 48px;
+  position:relative;
+}
+.sec-label {
+  font-family:var(--mono); font-size:10px; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--brass);
+  margin-bottom:14px; display:flex; align-items:center; gap:10px;
+}
+.sec-label::before { content:'//'; opacity:.45; }
+.sec-title {
+  font-family:var(--disp);
+  font-size:clamp(36px, 5vw, 60px);
+  letter-spacing:.03em; line-height:1;
+  margin-bottom:16px;
+}
+.sys-inline-code {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--brass);
+}
+.sec-sub {
+  font-size:15px; color:var(--sub); max-width:520px;
+  line-height:1.75; margin-bottom:56px; font-weight:300;
+}
+.sec-sub code {
+  font-family:var(--mono); font-size:12.5px;
+  background:var(--surf); border:1px solid var(--rim2);
+  padding:1px 6px; color:var(--brass);
+}
+
+.section-label-top {
+  margin-top: 24px;
+  margin-bottom: 10px;
+}
+.section-label {
+  margin-bottom: 10px;
+}
+
+/* SUBSYSTEM GRID */
+.sys-grid {
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+  border:1px solid var(--rim);
+}
+.sys-card {
+  padding:28px 24px;
+  border-right:1px solid var(--rim);
+  border-bottom:1px solid var(--rim);
+  position:relative; overflow:hidden;
+  transition:background .2s;
+  cursor:default;
+}
+.sys-card:nth-child(4n) { border-right:none; }
+.sys-card:nth-last-child(-n+4) { border-bottom:none; }
+.sys-card::before {
+  content:''; position:absolute;
+  left:0; top:0; bottom:0; width:2px;
+  background:var(--brass);
+  transform:scaleY(0); transform-origin:bottom;
+  transition:transform .25s ease;
+}
+.sys-card:hover { background:rgba(200,169,110,.04); }
+.sys-card:hover::before { transform:scaleY(1); }
+
+.sys-name {
+  font-family:var(--mono); font-size:12px; font-weight:700;
+  color:var(--text); letter-spacing:.06em; text-transform:uppercase;
+  margin-bottom:8px;
+}
+.sys-desc {
+  font-size:13px; color:var(--sub); line-height:1.6;
+  margin-bottom:16px; font-weight:300;
+}
+.sys-tag {
+  font-family:var(--mono); font-size:10px; letter-spacing:.06em;
+  padding:2px 8px;
+  display:inline-block;
+}
+.sys-tag.owned {
+  color:var(--brass); background:var(--brassf);
+  border:1px solid rgba(200,169,110,.2);
+}
+.sys-tag.open {
+  color:var(--sub); background:var(--faint);
+  border:1px solid var(--rim2);
+}
+.sys-tag.wip {
+  color:var(--blue); background:rgba(61,126,255,.08);
+  border:1px solid rgba(61,126,255,.2);
+}
+
+/* HORIZONTAL RULE */
+.hr { height:1px; background:var(--rim); margin:0 48px; }
+
+/* QUICKSTART */
+.plat-row { display:flex; gap:8px; margin-bottom:20px; }
+.plat-btn {
+  padding:6px 16px; font-family:var(--mono); font-size:11.5px;
+  font-weight:500; color:var(--sub); background:var(--surf);
+  border:1px solid var(--rim); cursor:pointer; transition:all .15s;
+  letter-spacing:.04em;
+}
+.plat-btn.active { color:var(--brass); border-color:rgba(200,169,110,.4); background:var(--brassf); }
+.plat-pane { display:none; }
+.plat-pane.active { display:block; }
+
+.planned-text {
+  color: var(--blue);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.self-text {
+  color: var(--brass);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.codeblock {
+  background:var(--ink); border:1px solid var(--rim);
+  overflow:hidden; margin-bottom:12px;
+}
+.cb-head {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 16px; border-bottom:1px solid var(--rim);
+  background:var(--surf);
+}
+.cb-title { font-family:var(--mono); font-size:10.5px; color:var(--sub); letter-spacing:.06em; }
+.cb-copy {
+  font-family:var(--mono); font-size:10px; color:var(--sub);
+  background:none; border:1px solid var(--rim); padding:2px 8px;
+  cursor:pointer; transition:all .15s; letter-spacing:.04em;
+}
+.cb-copy:hover { color:var(--brass); border-color:rgba(200,169,110,.4); }
+.codeblock pre {
+  padding:20px 20px; font-family:var(--mono); font-size:12.5px;
+  line-height:1.9; overflow-x:auto; color:var(--text);
+}
+pre .cm { color:var(--sub); }
+pre .kw { color:var(--brass); }
+pre .st { color:#7ec98a; }
+
+/* STACK TABLE */
+.stack-tbl { width:100%; border-collapse:collapse; }
+.stack-tbl th {
+  text-align:left; padding:10px 14px;
+  font-family:var(--mono); font-size:9.5px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--sub);
+  border-bottom:1px solid var(--rim); font-weight:700;
+}
+.stack-tbl td {
+  padding:12px 14px; border-bottom:1px solid var(--rim);
+  font-size:13.5px; color:var(--text); vertical-align:middle;
+}
+.stack-tbl tr:last-child td { border-bottom:none; }
+.stack-tbl tr:hover td { background:rgba(255,255,255,.015); }
+.stack-tbl td:first-child { font-family:var(--mono); font-size:12px; color:var(--sub); }
+.tag-wip {
+  font-family:var(--mono); font-size:10px; padding:2px 7px;
+  background:rgba(61,126,255,.08); color:var(--blue);
+  border:1px solid rgba(61,126,255,.2); margin-left:8px;
+}
+.tag-self {
+  font-family:var(--mono); font-size:10px; padding:2px 7px;
+  background:var(--brassf); color:var(--brass);
+  border:1px solid rgba(200,169,110,.2); margin-left:8px;
+}
+
+/* HOME FOOTER */
+.hfooter {
+  padding:28px 48px;
+  border-top:1px solid var(--rim);
+  display:flex; align-items:center; justify-content:space-between;
+  font-family:var(--mono); font-size:11px; color:var(--sub);
+  flex-wrap:wrap; gap:10px;
+}
+.hfooter a { color:var(--brass); text-decoration:none; }
+
+/* ══════════════════════════
+   CONTRIBUTING
+══════════════════════════ */
+.contrib { padding-top:54px; display:flex; min-height:100svh; }
+
+.cnav {
+  position:fixed; top:54px; left:0; width:228px;
+  height:calc(100svh - 54px);
+  background:var(--ink); border-right:1px solid var(--rim);
+  overflow-y:auto; padding:24px 0; z-index:50;
+  transition:transform .25s;
+}
+.cnav-group-label {
+  padding:10px 20px 4px;
+  font-family:var(--mono); font-size:9px; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--rim2); font-weight:700;
+  margin-top:8px;
+}
+.cnav-link {
+  display:block; padding:7px 20px;
+  font-size:13px; color:var(--sub);
+  text-decoration:none;
+  border-left:2px solid transparent;
+  transition:all .13s; font-weight:400;
+}
+.cnav-link:hover { color:var(--text); background:rgba(255,255,255,.02); border-left-color:var(--rim2); }
+.cnav-link.active { color:var(--brass); background:var(--brassf); border-left-color:var(--brass); }
+
+.cmain { margin-left:228px; flex:1; padding:0 72px 100px; max-width:820px; }
+
+/* CONTRIB SECTIONS */
+.cs { padding-top:80px; }
+.cs-eyebrow {
+  font-family:var(--mono); font-size:9.5px; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--brass); margin-bottom:12px;
+  display:flex; align-items:center; gap:8px;
+}
+.cs-heading {
+  margin-top: 24px;
+  margin-bottom: 10px;
+}
+.cs-eyebrow::before { content:'//'; opacity:.4; }
+.cs-title {
+  font-family:var(--disp);
+  font-size:clamp(28px,3.5vw,44px);
+  letter-spacing:.03em; line-height:1;
+  margin-bottom:16px;
+}
+.cs-body {
+  font-size:14.5px; color:var(--sub); line-height:1.85;
+  margin-bottom:18px; font-weight:300;
+}
+.cs-body strong { color:var(--text); font-weight:500; }
+.cs-body code {
+  font-family:var(--mono); font-size:12px;
+  background:var(--surf); border:1px solid var(--rim2);
+  padding:1px 6px; color:var(--brass);
+}
+.c-hr { height:1px; background:var(--rim); margin:72px 0; }
+
+/* CALLOUT */
+.callout {
+  display:flex; gap:14px; padding:16px 20px;
+  margin:20px 0; font-size:13.5px;
+}
+.c-warn { background:rgba(200,169,110,.05); border-left:2px solid var(--brass); }
+.c-info { background:rgba(61,126,255,.05); border-left:2px solid var(--blue); }
+.callout-icon { font-size:14px; flex-shrink:0; margin-top:2px; color:var(--brass); }
+.c-info .callout-icon { color:var(--blue); }
+.callout-body { color:var(--sub); line-height:1.7; }
+.callout-body strong { color:var(--text); }
+
+/* OWNERSHIP TABLE */
+.own-tbl { width:100%; border-collapse:collapse; margin:16px 0; }
+.own-tbl th {
+  text-align:left; padding:9px 14px;
+  font-family:var(--mono); font-size:9px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--sub);
+  border-bottom:1px solid var(--rim); font-weight:700;
+}
+.own-tbl td {
+  padding:11px 14px; border-bottom:1px solid var(--rim);
+  font-size:13px; vertical-align:middle;
+}
+.own-tbl tr:last-child td { border-bottom:none; }
+.own-tbl tr:hover td { background:rgba(255,255,255,.015); }
+.own-tbl td:first-child { font-family:var(--mono); font-size:12px; color:var(--brass); }
+.own-tbl td:last-child { font-size:12px; color:var(--sub); }
+.otag {
+  font-family:var(--mono); font-size:10.5px; padding:2px 9px;
+  color:var(--brass); background:var(--brassf);
+  border:1px solid rgba(200,169,110,.2);
+  display:inline-block;
+}
+.otag.open { color:var(--sub); background:var(--faint); border-color:var(--rim2); }
+
+/* BRANCH ITEMS */
+.branch-list { display:flex; flex-direction:column; gap:1px; margin:16px 0; background:var(--rim); border:1px solid var(--rim); }
+.branch-item {
+  display:flex; align-items:baseline; gap:20px;
+  background:var(--panel); padding:14px 18px;
+  transition:background .15s;
+}
+.branch-item:hover { background:var(--surf); }
+.branch-name { font-family:var(--mono); font-size:12.5px; color:var(--brass); min-width:210px; flex-shrink:0; }
+.branch-desc { font-size:13px; color:var(--sub); font-weight:300; }
+
+/* CODE STYLE GRID */
+.style-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--rim); border:1px solid var(--rim); margin:16px 0; }
+.style-cell {
+  background:var(--panel); padding:16px 18px;
+  transition:background .15s;
+}
+.style-cell:hover { background:var(--surf); }
+.sc-key { font-family:var(--mono); font-size:10.5px; color:var(--brass); letter-spacing:.06em; margin-bottom:5px; text-transform:uppercase; }
+.sc-val { font-size:13px; color:var(--sub); font-weight:300; line-height:1.5; }
+.sc-val code {
+  font-family:var(--mono); font-size:12px;
+  background:var(--surf); border:1px solid var(--rim2);
+  padding:1px 6px; color:var(--text);
+}
+
+/* TAG TABLE */
+.tag-tbl { width:100%; border-collapse:collapse; margin:14px 0; }
+.tag-tbl th {
+  text-align:left; padding:8px 12px;
+  font-size:9px; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--sub); border-bottom:1px solid var(--rim); font-weight:700;
+  font-family:var(--mono);
+}
+.tag-tbl td { padding:9px 12px; border-bottom:1px solid var(--rim); font-size:13px; color:var(--text); }
+.tag-tbl td:first-child { font-family:var(--mono); font-size:11.5px; color:var(--brass); }
+.tag-tbl tr:last-child td { border-bottom:none; }
+
+/* ── RESPONSIVE ── */
+@media (max-width:900px) {
+  .sys-grid { grid-template-columns:1fr 1fr; }
+  .sys-card:nth-child(4n) { border-right:1px solid var(--rim); }
+  .sys-card:nth-child(2n) { border-right:none; }
+  .sys-card:nth-last-child(-n+4) { border-bottom:1px solid var(--rim); }
+  .sys-card:nth-last-child(-n+2) { border-bottom:none; }
+}
+
+@media (max-width:768px) {
+  nav { padding:0 18px; }
+  .nav-tabs, .nav-right { display:none; }
+  .ham { display:flex; }
+
+  .hero { min-height:auto; padding:32px 20px 40px; }
+  .hero-content { padding-top:0; justify-content:flex-start; }
+  .sec { padding:64px 20px; }
+  .hr { margin:0 20px; }
+
+  .sys-grid { grid-template-columns:1fr; border:1px solid var(--rim); }
+  .sys-card { border-right:none !important; border-bottom:1px solid var(--rim); }
+  .sys-card:last-child { border-bottom:none !important; }
+
+  .contrib { flex-direction:column; }
+  .cnav {
+    position:fixed; width:100%; height:auto; max-height:55vh;
+    top:54px; transform:translateY(-110%); border-bottom:1px solid var(--rim);
+  }
+  .cnav.open { transform:translateY(0); }
+  .cmain { margin-left:0; padding:0 20px 60px; }
+  .cs { padding-top:52px; }
+  .style-grid { grid-template-columns:1fr; }
+  .hfooter { flex-direction:column; padding:20px; text-align:center; }
+}
+
+@media (max-width:480px) {
+  .hero-bar { flex-wrap:wrap; }
+  .hero-stat { flex:1 1 50%; border-right:1px solid var(--rim) !important; border-bottom:1px solid var(--rim); }
+}
+</style>
+</head>
+<body>
+
+<!-- CRT SCANLINES -->
+<canvas id="scanlines"></canvas>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <div class="logo-mark"></div>
+    CLZ ENGINE
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showTab('home',this)">Home</button>
+    <button class="nav-tab" onclick="showTab('contrib',this)">Contributing</button>
+  </div>
+  <div class="nav-right">
+    <a href="https://github.com/curloz123/curloz-engine" class="nav-gh" target="_blank" rel="noopener noreferrer">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      GITHUB
+    </a>
+  </div>
+  <button class="ham" id="ham" onclick="toggleMob()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="mob-menu" id="mobmenu">
+  <button class="mob-link active" onclick="showTab('home',null);toggleMob()">Home</button>
+  <button class="mob-link" onclick="showTab('contrib',null);toggleMob()">Contributing Guide</button>
+  <a href="https://github.com/curloz123/curloz-engine" class="mob-link" target="_blank" rel="noopener noreferrer">GitHub</a>
+</div>
+
+<!-- ══════════════ HOME ══════════════ -->
+<div class="tab-pane active" id="tab-home">
+<div class="home">
+
+  <section class="hero">
+    <div class="hero-lines"></div>
+    <div class="hero-content">
+      <div class="hero-kicker">Vulkan 1.3 &nbsp;·&nbsp; C++23 &nbsp; </div>
+      <h1 class="hero-title">
+        CURLOZ<br>
+        <span class="dim">EN</span><span class="gold">GINE</span>
+      </h1>
+      <p class="hero-tagline">
+        A <strong>modular, low-level</strong> game engine built from scratch.<br>
+        Vulkan 1.3 renderer, custom ECS, Lua scripting <br>
+        no hidden magic, no abstraction layers you didn't ask for.
+      </p>
+      <div class="hero-actions">
+        <a href="https://github.com/curloz123/curloz-engine" class="btn-solid" target="_blank" rel="noopener noreferrer">Get Started</a>
+        <button class="btn-ghost" onclick="showTab('contrib', document.querySelectorAll('.nav-tab')[1])">Contributor Guide</button>
+      </div>
+    </div>
+    <div class="hero-bar">
+      <div class="hero-stat">
+        <span class="hs-val">VK <em>1.3</em></span>
+        <span class="hs-key">Renderer</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hs-val">C++ <em>23</em></span>
+        <span class="hs-key">Standard</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hs-val">MIT</span>
+        <span class="hs-key">License</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hs-val">CMake <em>+</em> Ninja</span>
+        <span class="hs-key">Build System</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hs-val">Custom</span>
+        <span class="hs-key">ECS + Math</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUBSYSTEMS -->
+  <section class="sec" id="subsystems">
+    <div class="sec-label">Architecture</div>
+    <h2 class="sec-title">Subsystems</h2>
+    <p class="sec-sub">Every subsystem lives under <code>clz::</code>, follows <code>init() → update() → shutdown()</code>, and stays decoupled from its neighbours by design.</p>
+    <div class="sys-grid">
+      <div class="sys-card">
+        <div class="sys-name">Renderer</div>
+        <div class="sys-desc">Vulkan 1.3 pipeline. Dynamic rendering, per-frame command buffers, swapchain management, and sync primitives.</div>
+        <span class="sys-tag owned">@curl0z</span>
+      </div>
+      <div class="sys-card">
+        <div class="sys-name">Window</div>
+        <div class="sys-desc">GLFW lifecycle, keyboard input, and Vulkan surface creation. Forwards to native and render layers.</div>
+        <span class="sys-tag owned">@curl0z</span>
+      </div>
+      <div class="sys-card">
+        <div class="sys-name">ECS</div>
+        <div class="sys-desc">Custom entity-component system. Typed component storage, scene management, entity lifecycle. Zero external deps.</div>
+        <span class="sys-tag owned">@curl0z</span>
+      </div>
+      <div class="sys-card">
+        <div class="sys-name">Math</div>
+        <div class="sys-desc">Header-only vec2, vec3, vec4, mat4x4. Written to match the engine's type conventions exactly.</div>
+        <span class="sys-tag owned">@curl0z</span>
+      </div>
+      <div class="sys-card">
+        <div class="sys-name">Scripting</div>
+        <div class="sys-desc">Lua bridge for game logic. Run scripts without recompiling. Exposes engine state and subsystem calls to Lua.</div>
+        <span class="sys-tag owned">@curl0z</span>
+      </div>
+      <div class="sys-card">
+        <div class="sys-name">Config</div>
+        <div class="sys-desc">TOML and JSON loading. Drive engine settings from <code class="sys-inline-code"></code>config/engine.toml</code> without a recompile.</div>
+        <span class="sys-tag owned">@curl0z</span>
+      </div>
+      <div class="sys-card">
+        <div class="sys-name">Physics</div>
+        <div class="sys-desc">Jolt Physics integration for rigid body simulation and collision. Foundation planned, ready to be built out.</div>
+        <span class="sys-tag wip">planned</span>
+      </div>
+      <div class="sys-card">
+        <div class="sys-name">Audio</div>
+        <div class="sys-desc">OpenAL Soft for 3D positional audio. Subsystem scaffold is in place, implementation open for a contributor.</div>
+        <span class="sys-tag open">unassigned</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="hr"></div>
+
+  <!-- QUICK START -->
+  <section class="sec" id="start">
+    <div class="sec-label">Setup</div>
+    <h2 class="sec-title">Quick Start</h2>
+    <p class="sec-sub">Clone with submodules, configure, build. Binary lands at <code>build/debug/CurlozEngine</code>.</p>
+
+    <div class="plat-row">
+      <button class="plat-btn active" onclick="switchPlat('linux',this)">LINUX</button>
+      <button class="plat-btn" onclick="switchPlat('windows',this)">WINDOWS</button>
+    </div>
+
+    <div class="plat-pane active" id="plat-linux">
+      <div class="codeblock">
+        <div class="cb-head"><span class="cb-title">BASH</span><button class="cb-copy" onclick="copyCode(this)">COPY</button></div>
+        <pre><span class="cm"># Ubuntu / Debian</span>
+sudo apt install cmake ninja-build clang-format libvulkan-dev vulkan-tools
+
+<span class="cm"># Gentoo</span>
+sudo emerge -av cmake ninja clang dev-util/vulkan-tools
+
+<span class="cm"># Clone with submodules</span>
+git clone --recursive https://github.com/curl0z/curloz-engine.git
+cd curloz-engine
+
+<span class="cm"># Configure and build</span>
+cmake -B build/debug -G Ninja
+cmake --build build/debug</pre>
+      </div>
+    </div>
+
+    <div class="plat-pane" id="plat-windows">
+      <div class="codeblock">
+        <div class="cb-head"><span class="cb-title">WINDOWS: VISUAL STUDIO</span><button class="cb-copy" onclick="copyCode(this)">COPY</button></div>
+        <pre><span class="cm"># Prerequisites (install in this order)</span>
+<span class="cm">#   1. Git for Windows  →  git-scm.com  (Git Bash required)</span>
+<span class="cm">#   2. CMake            →  cmake.org</span>
+<span class="cm">#   3. Ninja            →  ninja-build.org</span>
+<span class="cm">#   4. Vulkan SDK       →  vulkan.lunarg.com</span>
+
+<span class="cm"># Clone (in Git Bash)</span>
+git clone --recursive https://github.com/curloz123/curloz-engine.git
+
+<span class="cm"># Open in Visual Studio via:  File → Open → Folder</span>
+<span class="cm"># VS detects CMakeLists.txt automatically.</span>
+<span class="cm"># Do NOT use .vcxproj files.</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <div class="hr"></div>
+
+  <!-- STACK -->
+  <section class="sec" id="stack">
+    <div class="sec-label">Technology</div>
+    <h2 class="sec-title">Tech Stack</h2>
+    <p class="sec-sub">
+  Systems marked <span class="planned-text">planned</span> are integrated or in active development.
+  Systems marked <span class="self-text">self</span> have no external dependency.
+</p>
+    <table class="stack-tbl">
+      <thead><tr><th>System</th><th>Library</th></tr></thead>
+      <tbody>
+        <tr><td>Renderer</td><td>Vulkan 1.3</td></tr>
+        <tr><td>Windowing</td><td>GLFW</td></tr>
+        <tr><td>ECS</td><td>Custom <span class="tag-self">self</span></td></tr>
+        <tr><td>Math</td><td>Custom <span class="tag-self">self</span></td></tr>
+        <tr><td>Scripting</td><td>Lua / Sol2</td></tr>
+        <tr><td>Build System</td><td>CMake + Ninja</td></tr>
+        <tr><td>Physics</td><td>Jolt Physics <span class="tag-wip">planned</span></td></tr>
+        <tr><td>Audio</td><td>OpenAL Soft <span class="tag-wip">planned</span></td></tr>
+        <tr><td>Model Loading</td><td>fastgltf <span class="tag-wip">planned</span></td></tr>
+        <tr><td>Animation</td><td>ozz-animation <span class="tag-wip">planned</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="hfooter">
+    <span>Curloz Engine &nbsp;·&nbsp; MIT License &nbsp;·&nbsp; Vulkan 1.3 + C++23</span>
+    <span><a href="mailto:curloz@tutamail.com">curloz@tutamail.com</a></span>
+  </div>
+
+</div>
+</div><!-- /tab-home -->
+
+<!-- ══════════════ CONTRIBUTING ══════════════ -->
+<div class="tab-pane" id="tab-contrib">
+<div class="contrib">
+
+  <aside class="cnav" id="cnav">
+    <div class="cnav-group-label">Overview</div>
+    <a href="#c-intro" class="cnav-link active" onclick="navClose()">Introduction</a>
+    <a href="#c-arch" class="cnav-link" onclick="navClose()">Architecture</a>
+    <a href="#c-ownership" class="cnav-link" onclick="navClose()">Ownership</a>
+
+    <div class="cnav-group-label">Setup</div>
+    <a href="#c-env" class="cnav-link" onclick="navClose()">Dev Environment</a>
+
+    <div class="cnav-group-label">Workflow</div>
+    <a href="#c-git" class="cnav-link" onclick="navClose()">Branches</a>
+    <a href="#c-commits" class="cnav-link" onclick="navClose()">Commit Messages</a>
+    <a href="#c-prs" class="cnav-link" onclick="navClose()">Pull Requests</a>
+
+    <div class="cnav-group-label">Standards</div>
+    <a href="#c-style" class="cnav-link" onclick="navClose()">Code Style</a>
+    <a href="#c-doxygen" class="cnav-link" onclick="navClose()">Doxygen Comments</a>
+    <a href="#c-gendocs" class="cnav-link" onclick="navClose()">Generating Docs</a>
+  </aside>
+
+  <main class="cmain">
+
+    <div class="cs" id="c-intro">
+      <div class="cs-eyebrow">Maintainer Guide</div>
+      <h2 class="cs-title">Contributing to Curloz Engine</h2>
+      <p class="cs-body">Read this before writing a single line. The engine is built as a collection of independent subsystems under <code>clz::</code>. Every subsystem owns its own state. They don't reach into each other; they communicate through defined interfaces only.</p>
+      <div class="callout c-warn">
+        <div class="callout-icon">!</div>
+        <div class="callout-body"><strong>Boundary rule:</strong> Do not touch code outside your assigned area without discussing it first. If you need something from another subsystem, ask. Don't patch it yourself.</div>
+      </div>
+    </div>
+
+    <div class="c-hr"></div>
+
+    <div class="cs" id="c-arch">
+      <div class="cs-eyebrow">Design</div>
+      <h2 class="cs-title">Architecture</h2>
+      <p class="cs-body">Every subsystem that requires it exposes three functions: <code>init()</code>, <code>update()</code> called once per frame, and <code>shutdown()</code>. Shutdown always runs in reverse init order. Not every subsystem needs all three.</p>
+      <p class="cs-body"><strong>Decoupling is intentional.</strong> The renderer doesn't know about ECS internals, it receives only the component data it needs. <code>main.cpp</code> is the only file that sees all subsystems simultaneously, calling each in dependency order at startup, every frame, and in reverse at the end.</p>
+      <div class="codeblock">
+        <div class="cb-head"><span class="cb-title">PROJECT LAYOUT</span></div>
+        <pre>curloz-engine/
+├── <span class="kw">src/renderer/</span>       <span class="cm">← Renderer subsystem</span>
+├── <span class="kw">src/window/</span>         <span class="cm">← Window subsystem</span>
+├── <span class="kw">src/ecs/</span>            <span class="cm">← Entity Component System</span>
+├── <span class="kw">src/audio/</span>          <span class="cm">← Audio subsystem</span>
+├── <span class="kw">src/scripting/</span>      <span class="cm">← Lua scripting bridge</span>
+├── <span class="kw">include/math/</span>       <span class="cm">← Header-only math library</span>
+├── <span class="kw">include/core/</span>       <span class="cm">← Engine-wide utilities</span>
+└── <span class="kw">src/main.cpp</span>        <span class="cm">← Orchestrates all subsystems</span></pre>
+      </div>
+    </div>
+
+    <div class="c-hr"></div>
+
+    <div class="cs" id="c-ownership">
+      <div class="cs-eyebrow">Ownership</div>
+      <h2 class="cs-title">Who Maintains What</h2>
+      <p class="cs-body">Each subsystem has one owner. Open an issue or PR to reach them before touching their area.</p>
+      <table class="own-tbl">
+        <thead><tr><th>Subsystem</th><th>Owner</th><th>Scope</th></tr></thead>
+        <tbody>
+          <tr><td>Window</td><td><span class="otag">@curl0z</span></td><td><code>src/window/</code> and <code>include/window/</code></td></tr>
+          <tr><td>Renderer</td><td><span class="otag">@curl0z</span></td><td><code>src/renderer/</code> and <code>include/renderer/</code></td></tr>
+          <tr><td>Math</td><td><span class="otag">@curl0z</span></td><td><code>include/math/</code></td></tr>
+          <tr><td>ECS</td><td><span class="otag">@curl0z</span></td><td><code>src/ecs/</code> and <code>include/ecs/</code></td></tr>
+          <tr><td>Physics</td><td><span class="otag open">unassigned</span></td><td></td></tr>
+          <tr><td>Audio</td><td><span class="otag open">unassigned</span></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="c-hr"></div>
+
+    <div class="cs" id="c-env">
+      <div class="cs-eyebrow">Setup</div>
+      <h2 class="cs-title">Dev Environment</h2>
+      <p class="cs-body section-label"><strong>Linux</strong></p>
+      <div class="codeblock">
+        <div class="cb-head"><span class="cb-title">BASH</span><button class="cb-copy" onclick="copyCode(this)">COPY</button></div>
+        <pre><span class="cm"># Clone with submodules</span>
+git clone --recursive https://github.com/curloz123/curloz-engine.git
+cd curloz-engine
+
+<span class="cm"># Gentoo</span>
+sudo emerge -av cmake ninja clang vulkan-tools
+
+<span class="cm"># Ubuntu / Debian</span>
+sudo apt install cmake ninja-build clang-format libvulkan-dev vulkan-tools
+
+<span class="cm"># Build</span>
+cmake -B build -G Ninja
+cmake --build build</pre>
+      </div>
+      <p class="cs-body section-label-top"><strong>Windows</strong></p>
+      <p class="cs-body">Install in order: <strong>Git for Windows</strong> (includes Git Bash: required), <strong>CMake</strong>, <strong>Ninja</strong>, <strong>Vulkan SDK</strong>. Open the repo in Visual Studio via <strong>File → Open → Folder</strong>: not Open Project. VS detects <code>CMakeLists.txt</code> automatically. Do not use <code>.vcxproj</code> files.</p>
+    </div>
+
+    <div class="c-hr"></div>
+
+    <div class="cs" id="c-git">
+      <div class="cs-eyebrow">Workflow</div>
+      <h2 class="cs-title">Git Branches</h2>
+      <p class="cs-body">Never commit directly to <code>main</code>. Always branch, then PR.</p>
+      <div class="branch-list">
+        <div class="branch-item"><span class="branch-name">main</span><span class="branch-desc">Always stable, always builds. Protected.</span></div>
+        <div class="branch-item"><span class="branch-name">feature/xxx</span><span class="branch-desc">New features. Branch from main, PR back to main.</span></div>
+        <div class="branch-item"><span class="branch-name">fix/xxx</span><span class="branch-desc">Bug fixes. Same pattern as feature branches.</span></div>
+      </div>
+      <p class="cs-body section-label-top"><strong>Windows</strong></p>
+      <div class="codeblock">
+        <div class="cb-head"><span class="cb-title">BRANCH LIFECYCLE</span><button class="cb-copy" onclick="copyCode(this)">COPY</button></div>
+        <pre><span class="cm"># Start work</span>
+git checkout -b feature/physics-rigidbody
+
+<span class="cm"># Push branch</span>
+git push --set-upstream origin feature/physics-rigidbody
+
+<span class="cm"># After merge, delete</span>
+git branch -d feature/physics-rigidbody
+git push origin --delete feature/physics-rigidbody</pre>
+      </div>
+    </div>
+
+    <div class="c-hr"></div>
+
+    <div class="cs" id="c-commits">
+      <div class="cs-eyebrow">Workflow</div>
+      <h2 class="cs-title">Commit Messages</h2>
+      <p class="cs-body">Format: <code>type: short description</code>. Types are <code>feature</code>, <code>fix</code>, <code>refactor</code>. No "fixed stuff". No "wip" on main. No giant commits that touch everything.</p>
+      <div class="codeblock">
+        <div class="cb-head"><span class="cb-title">EXAMPLES</span></div>
+        <pre><span class="kw">feature</span>: add rigid body component to ECS
+<span class="kw">fix</span>: resolve swapchain recreation on window resize
+<span class="kw">refactor</span>: clean up command buffer recording in mainloop</pre>
+      </div>
+    </div>
+
+    <div class="c-hr"></div>
+
+    <div class="cs" id="c-prs">
+      <div class="cs-eyebrow">Workflow</div>
+      <h2 class="cs-title">Pull Requests</h2>
+      <p class="cs-body">Every branch merge, even between collaborators,  goes through a PR. Write what you did and why in the description. Minimum one review before merge.</p>
+      <div class="callout c-info">
+        <div class="callout-icon">i</div>
+        <div class="callout-body">If your PR touches more than one subsystem, tag the respective owners in the description. They need to review their section before merge.</div>
+      </div>
+    </div>
+
+    <div class="c-hr"></div>
+
+    <div class="cs" id="c-style">
+      <div class="cs-eyebrow">Standards</div>
+      <h2 class="cs-title">Code Style</h2>
+      <p class="cs-body">Enforced by <code>.clang-format</code> and <code>.editorconfig</code> in the repo root. Set up the pre-commit hook so formatting runs automatically on every commit.</p>
+      <div class="style-grid">
+        <div class="style-cell"><div class="sc-key">Indentation</div><div class="sc-val">Tabs, 8-wide</div></div>
+        <div class="style-cell"><div class="sc-key">Braces</div><div class="sc-val">Allman,  brace always on its own line</div></div>
+        <div class="style-cell"><div class="sc-key">Pointers</div><div class="sc-val">Left-aligned: <code>int* ptr</code></div></div>
+        <div class="style-cell"><div class="sc-key">Functions</div><div class="sc-val"><code>camelCase</code></div></div>
+        <div class="style-cell"><div class="sc-key">Structs / Classes</div><div class="sc-val"><code>PascalCase</code></div></div>
+        <div class="style-cell"><div class="sc-key">Members / Variables</div><div class="sc-val"><code>camelCase</code></div></div>
+        <div class="style-cell" style="grid-column:span 2">
+          <div class="sc-key">Subsystem Variable Prefix</div>
+          <div class="sc-val">Every module-level variable is prefixed by subsystem e.g. <code>ph_body</code> for Physics, <code>rn_device</code> for Renderer, <code>wn_window</code> for Window</div>
+        </div>
+      </div>
+
+      <p class="cs-body" style="margin-top:20px;margin-bottom:10px"><strong>Linux: hook setup</strong></p>
+      <div class="codeblock">
+        <div class="cb-head"><span class="cb-title">BASH</span><button class="cb-copy" onclick="copyCode(this)">COPY</button></div>
+        <pre><span class="cm"># Install clang-format</span>
+sudo apt install clang-format    <span class="cm"># Ubuntu</span>
+sudo emerge -av clang            <span class="cm"># Gentoo</span>
+
+<span class="cm"># Pre-commit hook</span>
+cp scripts/pre-commit .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+
+<span class="cm"># Fix formatting manually</span>
+find src include -name "*.cpp" -o -name "*.hpp" | xargs clang-format -i</pre>
+      </div>
+
+      <p class="cs-body" style="margin-top:20px;margin-bottom:10px"><strong>Windows: Visual Studio</strong></p>
+      <p class="cs-body">Enable via <strong>Tools → Options → Text Editor → C/C++ → Code Style → Formatting → Enable ClangFormat support → Format on Save</strong>. VS picks up <code>.clang-format</code> from the repo root automatically.</p>
+    </div>
+
+    <div class="c-hr"></div>
+
+    <div class="cs" id="c-doxygen">
+      <div class="cs-eyebrow">Standards</div>
+      <h2 class="cs-title">Doxygen Comments</h2>
+      <p class="cs-body">Every file, struct, and function must be documented. Use <code>///</code> inline and <code>/** */</code> block comments.</p>
+
+      <p class="cs-body" style="margin-bottom:10px"><strong>File header</strong> every <code>.cpp</code> and <code>.hpp</code>:</p>
+      <div class="codeblock">
+        <div class="cb-head"><span class="cb-title">C++</span></div>
+        <pre><span class="cm">/**
+ * @file PhysicsSystem.hpp
+ * @author Your Name
+ * @brief Brief one-line description of what this file contains.
+ */</span></pre>
+      </div>
+
+      <p class="cs-body" style="margin-top:20px;margin-bottom:10px"><strong>Structs and classes</strong></p>
+      <div class="codeblock">
+        <div class="cb-head"><span class="cb-title">C++</span></div>
+        <pre><span class="cm">/**
+ * @brief Stores position, rotation, and scale of an entity in world space.
+ *
+ * Handshake between ECS and physics. Do not modify the layout
+ * without consulting @curl0z.
+ */</span>
+struct TransformComponent
+{
+        glm::vec3 position; <span class="cm">///< World space position</span>
+        glm::quat rotation; <span class="cm">///< Rotation as quaternion</span>
+        glm::vec3 scale;    <span class="cm">///< Non-uniform scale</span>
+};</pre>
+      </div>
+
+      <p class="cs-body" style="margin-top:20px;margin-bottom:10px"><strong>Functions</strong></p>
+      <div class="codeblock">
+        <div class="cb-head"><span class="cb-title">C++</span></div>
+        <pre><span class="cm">/**
+ * @brief Submits a mesh for rendering this frame.
+ *
+ * @param data  Mesh geometry and material data to submit.
+ * @return True if submission succeeded, false if queue is full.
+ */</span>
+bool submitMesh(const MeshSubmitData& data);</pre>
+      </div>
+
+      <p class="cs-body" style="margin-top:20px;margin-bottom:10px"><strong>Enums</strong></p>
+      <div class="codeblock">
+        <div class="cb-head"><span class="cb-title">C++</span></div>
+        <pre><span class="cm">/**
+ * @brief Describes the current state of a physics body.
+ */</span>
+enum class BodyState
+{
+        Active,   <span class="cm">///< Body is being simulated</span>
+        Sleeping, <span class="cm">///< Body has come to rest</span>
+        Static    <span class="cm">///< Body never moves</span>
+};</pre>
+      </div>
+
+      <p class="cs-body" style="margin-top:24px;margin-bottom:10px"><strong>Tag reference</strong></p>
+      <table class="tag-tbl">
+        <thead><tr><th>Tag</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td>@file</td><td>File name</td></tr>
+          <tr><td>@author</td><td>Who wrote it</td></tr>
+          <tr><td>@brief</td><td>One-line summary</td></tr>
+          <tr><td>@param</td><td>Function parameter</td></tr>
+          <tr><td>@return</td><td>Return value description</td></tr>
+          <tr><td>@note</td><td>Extra information</td></tr>
+          <tr><td>@warning</td><td>Something that can go wrong</td></tr>
+          <tr><td>@todo</td><td>Planned work</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="c-hr"></div>
+
+    <div class="cs" id="c-gendocs">
+      <div class="cs-eyebrow">Standards</div>
+      <h2 class="cs-title">Generating Docs Locally</h2>
+      <p class="cs-body">Docs are not committed to the repo,  <code>docs/</code> is in <code>.gitignore</code>. Generate them locally when you need to review documentation output.</p>
+      <div class="codeblock">
+        <div class="cb-head"><span class="cb-title">BASH</span><button class="cb-copy" onclick="copyCode(this)">COPY</button></div>
+        <pre>doxygen Doxyfile
+<span class="cm"># Output → docs/</span></pre>
+      </div>
+      <div class="callout c-warn">
+        <div class="callout-icon">!</div>
+        <div class="callout-body"><strong>Do not commit</strong> the <code>docs/</code> directory. It is gitignored on purpose.</div>
+      </div>
+    </div>
+
+  </main>
+</div>
+</div><!-- /tab-contrib -->
+
+<script>
+// ── SCANLINES (CRT effect) ──
+(function() {
+  const canvas = document.getElementById('scanlines');
+  const ctx = canvas.getContext('2d');
+  let offset = 0;
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+    ctx.lineWidth = 1;
+    const spacing = 3;
+    for (let y = (offset % spacing); y < canvas.height; y += spacing) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(canvas.width, y);
+      ctx.stroke();
+    }
+    offset = (offset + 0.15) % spacing;
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ── TABS ──
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  document.querySelectorAll('.mob-link').forEach(l => l.classList.remove('active'));
+  window.scrollTo(0, 0);
+  // re-setup scroll spy when switching to contrib
+  if (id === 'contrib') setTimeout(setupSpy, 50);
+}
+
+// ── MOBILE ──
+function toggleMob() {
+  const m = document.getElementById('mobmenu');
+  const h = document.getElementById('ham');
+  const open = m.classList.toggle('open');
+  h.children[0].style.transform = open ? 'rotate(45deg) translate(4px,5px)' : '';
+  h.children[1].style.opacity = open ? '0' : '';
+  h.children[2].style.transform = open ? 'rotate(-45deg) translate(4px,-5px)' : '';
+}
+
+// ── PLATFORM SWITCHER ──
+function switchPlat(id, btn) {
+  document.querySelectorAll('.plat-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.plat-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('plat-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── COPY ──
+function copyCode(btn) {
+  const pre = btn.closest('.codeblock').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'COPIED';
+    setTimeout(() => btn.textContent = orig, 1800);
+  });
+}
+
+// ── CONTRIB NAV CLOSE (mobile) ──
+function navClose() {
+  if (window.innerWidth <= 768) {
+    document.getElementById('cnav').classList.remove('open');
+  }
+}
+
+// ── SCROLL SPY ──
+let spy = null;
+function setupSpy() {
+  if (spy) spy.disconnect();
+  const links = document.querySelectorAll('.cnav-link');
+  const sections = document.querySelectorAll('.cs');
+  spy = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const a = document.querySelector('.cnav-link[href="#' + e.target.id + '"]');
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => spy.observe(s));
+}
+setupSpy();
+</script>
+</body>
+</html>
