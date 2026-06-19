@@ -42,10 +42,6 @@ namespace clz::renderer
 		}
 
 		clz::log::debug("initialized all renderer context's");
-
-		// TEST
-		createVertexBuffer();
-		// TEST
 	}
 
 	void update(const float deltaTime)
@@ -78,10 +74,6 @@ namespace clz::renderer
 	void shutdown()
 	{
 		vkDeviceWaitIdle(r_deviceContext.device);
-
-		// TEST
-		destroyVertexBuffer();
-		// TEST
 
 		destroyFrameContext();
 		destroyPipelineContext();

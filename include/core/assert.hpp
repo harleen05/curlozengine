@@ -3,7 +3,7 @@
 #include "core/logs.hpp"
 #include <cassert>
 #include <source_location>
-#include <string>
+#include <string_view>
 
 namespace clz
 {

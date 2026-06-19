@@ -6,6 +6,7 @@
  */
 #include "renderer/pipelinecontext.hpp"
 #include "core/logs.hpp"
+#include "renderer/context.hpp"
 #include "renderer/variables.hpp"
 #include <fstream>
 #include <vector>
@@ -121,10 +122,13 @@ namespace clz::renderer
 
 		// TEST START
 
+		createVertexBuffer();
 		auto bindingDescription = getVertexBindingDescription();
-		auto attributeDescriptions = getVertexAttributeDescription();
+		auto attributeDescriptions = getVertexAttributeDescriptions();
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo = {
 		    .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+		    .pNext = nullptr,
+		    .flags = 0,
 		    .vertexBindingDescriptionCount = 1,
 		    .pVertexBindingDescriptions = &bindingDescription,
 		    .vertexAttributeDescriptionCount =
@@ -183,8 +187,11 @@ namespace clz::renderer
 		colorBlending.attachmentCount = 1;
 		colorBlending.pAttachments = &colorBlendAttachment;
 
+		createDescriptorSetLayout();
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		pipelineLayoutInfo.setLayoutCount = 1;
+		pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
 		if (vkCreatePipelineLayout(r_deviceContext.device, &pipelineLayoutInfo, nullptr,
 					   &r_pipelineContext.layout) != VK_SUCCESS) [[unlikely]]
 		{
@@ -192,10 +199,10 @@ namespace clz::renderer
 			return std::unexpected("could not create pipeline");
 		}
 
-		VkPipelineRenderingCreateInfo pipelineRenderingCI = {
-		    .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
-		    .colorAttachmentCount = 1,
-		    .pColorAttachmentFormats = &r_swapchainContext.format.format};
+		VkPipelineRenderingCreateInfo pipelineRenderingCI = {};
+		pipelineRenderingCI.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+		pipelineRenderingCI.colorAttachmentCount = 1;
+		pipelineRenderingCI.pColorAttachmentFormats = &r_swapchainContext.format.format;
 
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -231,6 +238,10 @@ namespace clz::renderer
 	{
 		vkDestroyPipeline(r_deviceContext.device, r_pipelineContext.pipeline, nullptr);
 		vkDestroyPipelineLayout(r_deviceContext.device, r_pipelineContext.layout, nullptr);
+		// TEST
+		destroyVertexBuffer();
+		// TEST
+
 		vkDestroyShaderModule(r_deviceContext.device, r_pipelineContext.vertexShader,
 				      nullptr);
 		vkDestroyShaderModule(r_deviceContext.device, r_pipelineContext.fragmentShader,
