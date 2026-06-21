@@ -33,6 +33,8 @@ Every subsystem's architecture and patterns
 | ECS | @curl0z | Everything under **src or include/ecs/** |
 | Physics | unassigned |  |
 | Audio | unassigned | |
+| Website | @harleen05 | |
+| Documentation | @harleen05 | |
 
 **Do not touch code outside your area without discussing it first.** If you need something from another area, ask. Don't patch it yourself.
 
