@@ -1,9 +1,8 @@
 /**
  * @file vec3.hpp
- * @brief SIMD accelerated 3-component float vector.
+ * @brief 3-component float vector.
  * @author curl0z
  *
- * Uses SSE4.1 intrinsics via __m128 for all operations.
  * x86-64 only.
  */
 #pragma once
@@ -13,11 +12,9 @@
 namespace clz::math
 {
 	/**
-	 * @brief 3-component float vector backed by a 128-bit SSE register.
+	 * @brief 3-component float vector
 	 *
 	 * Members x, y, z are accessible directly
-	 * Not recommended to extract values via the underlying xmm register.
-	 * All instances are 16-byte aligned for safe use with aligned SSE loads/stores.
 	 */
 	struct vec3
 	{
@@ -35,7 +32,7 @@ namespace clz::math
 		vec3(const float x, const float y, const float z) : x(x), y(y), z(z) {}
 
 		/**
-		 * @brief Constructs a vec3 
+		 * @brief Constructs a vec3
 		 * with x y z all set to a single float value
 		 * @param value Initialize x,y,z to this value
 		 */

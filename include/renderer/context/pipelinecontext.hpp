@@ -6,7 +6,7 @@
 #pragma once
 
 #include "renderer/context/context.hpp"
-#include <string_view>
+#include <string>
 
 namespace clz::renderer
 {
@@ -35,7 +35,7 @@ namespace clz::renderer
 	 * Defined in mainpipeline.cpp
 	 */
 	 bool createMainPipeline();
-}
+} // namespace clz::renderer
 
 namespace clz::renderer
 {

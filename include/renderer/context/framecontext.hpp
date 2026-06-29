@@ -63,4 +63,5 @@ namespace clz::renderer
 	 * @brief Destroys all the frame sync objects
 	 */
 	void destroySyncObjects();
+
 } // namespace clz::renderer

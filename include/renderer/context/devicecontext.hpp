@@ -9,9 +9,6 @@
  */
 #pragma once
 
-#include <expected>
-#include <string>
-
 namespace clz::renderer
 {
 	/**

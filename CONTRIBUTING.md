@@ -2,15 +2,39 @@
 
 This document is for contributors working on Curloz Engine. Read this before writing a single line.
 
+## General Architecture
+
+Curloz Engine is built as a collection of independent subsystems under the clz:: namespace, each following the same lifecycle pattern: an init() to set up state, an update() that runs once per frame, and a shutdown() that tears everything down in reverse order of initialization. Ofcourse not all subsystems require special init and destruction. 
+
+```bash
+curloz-engine/
+├── Renderer		# Renderer subsystem
+├── Window		# Window subsystem
+├── Math			# Math subsystem
+└── ECS			# ECS subsystem
+```
+
+The init pattern is a linear sequence of init calls, with each subsystem initializing in dependency order. For example, the renderer subsystem depends on the window subsystem, so the window subsystem's init must be called before the renderer subsystem's init. Same is the case with shutdown.
+
+Every subsystem shall stay decoupled from everything else, on purpose. We don't need to know about other subsystems to do our job. We just need to know how to interface with them, and get relevant data from them. For example, the renderer subsystem doesn't need to know about the ECS subsystem to render entities, but needs data about entities render component.
+
+The main loop in main.cpp is the only place that knows about every subsystem at once, calling each one's init in dependency order at startup, update every frame, and shutdown in reverse order at the end.
+
+Every subsystem's architecture and patterns
 ---
 
-## Who Owns What
+## Who mainting what
 
-| Area | Owner      | Scope |
+| Subsystem | Owner      | Scope |
 |---|------------|---|
-| Renderer, Vulkan, pipelines, sync, swapchain | @curl0z    | Everything under `src/renderer/` |
-| ECS, EnTT systems, components | unassigned | Everything under `src/ecs/` |
-| Physics, Jolt integration | unassigned | Everything under `src/physics/` |
+| Window | @curl0z    | Everything under **src or include/window/** |
+| Renderer | @curl0z    | Everything under **src or include/renderer/** |
+| Math | @curl0z | Everything under **include/math/** |
+| ECS | @curl0z | Everything under **src or include/ecs/** |
+| Physics | unassigned |  |
+| Audio | unassigned | |
+| Website | @harleen05 | |
+| Documentation | @harleen05 | |
 
 **Do not touch code outside your area without discussing it first.** If you need something from another area, ask. Don't patch it yourself.
 
@@ -44,7 +68,7 @@ cmake --build build
 - Install [Ninja](https://ninja-build.org/)
 - Install [Vulkan SDK](https://vulkan.lunarg.com/)
 - Open the repo folder in Visual Studio via **File → Open → Folder** (not Open Project)
-- VS detects `CMakeLists.txt` automatically — no `.vcxproj` files
+- VS detects `CMakeLists.txt` automatically Don't use `.vcxproj` files
 
 ---
 
@@ -96,13 +120,13 @@ No "fixed stuff". No "wip" on main. No giant commits that touch everything.
 
 ## Code Style
 
-- **Indentation** — tabs, 8-wide
-- **Braces** — Allman everywhere (brace always on its own line)
-- **Pointers** — left aligned (`int* ptr`)
-- **Classes** — `PascalCase`
-- **Members/variables** — `camelCase`
-- **Statics** — `s_` prefix
-- **Sub system variables** — every variable described at sub system level must be prefixed as per the subsystem's name. For example in physics, variables must be prefixed with `ph_` etc..
+- **Indentation** -> tabs, 8-wide
+- **Braces** -> Allman everywhere (brace always on its own line)
+- **Pointers** -> left aligned (`int* ptr`)
+- **Functions** —> `camelCase`
+- **Structs/Classes** —> `PascalCase`
+- **Members/Variables** —> `camelCase`
+- **Sub system variables** —> every variable described at sub system level must be prefixed as per the subsystem's name. For example in physics, variables must be prefixed with `ph_` etc..
 
 Enforced by `.clang-format` and `.editorconfig` in the repo root.
 
@@ -149,6 +173,7 @@ Every `.cpp` and `.hpp` file starts with:
  * @brief Brief one line description of what this file contains
  */
 ```
+mentioning the author and a little brief about what it does.
 
 ### Structs and Classes
 
@@ -159,7 +184,7 @@ Every `.cpp` and `.hpp` file starts with:
  * This is the handshake between the ECS and physics systems.
  * Do not modify the layout without consulting @curl0z.
  */
-struct TransformComponent
+struct TransformComponent 
 {
         glm::vec3 position; ///< World space position
         glm::quat rotation; ///< Rotation as quaternion
@@ -209,7 +234,7 @@ enum class BodyState
 ---
 ## Doxygen Docs
 
-Docs are **not committed to the repo**. They are auto-generated and hosted via GitHub Pages on every push to `main`.
+Docs are **not committed to the repo**. If you want to view the docs, you need to generate them locally via doxxygen.
 
 To generate locally:
 
