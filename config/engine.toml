@@ -12,4 +12,5 @@ refreshrate = 120
 triplebuffering = true
 
 [entity]
+# Entity file. Has to be a JSON. Mention the path here.
 file = "config/entity.json"

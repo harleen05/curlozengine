@@ -15,6 +15,7 @@
 
 #include "componentstorage.hpp"
 #include "entity.hpp"
+#include "core/logs.hpp"
 
 namespace clz::ecs
 {
@@ -116,18 +117,11 @@ namespace clz::ecs
 	{
 		auto& componentStorage = getStorage<T>();
 		if (componentStorage.sparse[e] == NULL_ENTITY)
+		{
+			clz::log::warn("Attempt to remove a non existing component");
 			return;
-
-		uint32_t index = componentStorage.sparse[e];
-		uint32_t last = componentStorage.storage.size() - 1;
-
-		componentStorage.storage[index] = componentStorage.storage[last];
-		componentStorage.dense[index] = componentStorage.dense[last];
-		componentStorage.sparse[componentStorage.dense[index]] = index;
-
-		componentStorage.dense.pop_back();
-		componentStorage.storage.pop_back();
-		componentStorage.sparse[e] = NULL_ENTITY;
+		}
+		componentStorage.removeEntityDat(e);
 	}
 
 	/**
@@ -140,7 +134,7 @@ namespace clz::ecs
 	 */
 	inline void removeAllComponentsForEntity(const entity e)
 	{
-		for (auto& storage : ecs_componentStorages)
+		for (const auto& storage : ecs_componentStorages)
 			storage->removeEntityData(e);
 	}
 

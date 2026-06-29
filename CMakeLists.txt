@@ -67,3 +67,16 @@ target_link_libraries(${PROJECT_NAME} PRIVATE OpenAL)
 set(JSON_BuildTests OFF CACHE BOOL "" FORCE)
 add_subdirectory(external/json)
 target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json::nlohmann_json)
+
+#STB_IMAGE
+target_include_directories(${PROJECT_NAME} PRIVATE external/stb)
+
+#FASTGLTF
+add_subdirectory(external/fastgltf)
+target_link_libraries(${PROJECT_NAME} PRIVATE fastgltf)
+
+# ASSIMP
+set(ASSIMP_BUILD_ZLIB ON CACHE BOOL "" FORCE)
+add_subdirectory(external/assimp)
+target_compile_options(assimp PRIVATE -Wno-error -Wno-unsafe-buffer-usage)
+target_link_libraries(${PROJECT_NAME} PRIVATE assimp::assimp)

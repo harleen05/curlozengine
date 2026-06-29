@@ -37,18 +37,16 @@ namespace clz::math
 		/**
 		 * @brief Constructs a vec3 
 		 * with x y z all set to a single float value
-		 * @param x X component.
-		 * @param y Y component.
-		 * @param z Z component.
+		 * @param value Initialize x,y,z to this value
 		 */
-		vec3(const float value) : x(value), y(value), z(value) {}
+		explicit vec3(const float value) : x(value), y(value), z(value) {}
 
 
 		/**
 		 * @brief Constructs a vec3 directly from a __m128 register.
 		 * @param xmm Source SSE register.
 		 */
-		vec3(const __m128& xmm)
+		explicit vec3(const __m128& xmm)
 		{
 			x = _mm_cvtss_f32(xmm);
 			__m128 res = _mm_shuffle_ps(xmm, xmm, _MM_SHUFFLE(1, 1, 1, 1));
@@ -59,29 +57,25 @@ namespace clz::math
 	};
 
 	/**
-	 * @brief Component-wise addition of two vec3s.
+	 * @brief Component-wise addition of two vec3's.
 	 * @param lhs Left operand.
 	 * @param rhs Right operand.
 	 * @return lhs + rhs
 	 */
 	inline vec3 add(const vec3& lhs, const vec3& rhs)
 	{
-		__m128 vec1 = _mm_set_ps(0, lhs.z, lhs.y, lhs.x);
-		__m128 vec2 = _mm_set_ps(0, rhs.z, rhs.y, rhs.x);
-		return vec3(_mm_add_ps(vec1, vec2));
+		return {lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z};
 	}
 
 	/**
-	 * @brief Component-wise subtraction of two vec3s.
+	 * @brief Component-wise subtraction of two vec3's.
 	 * @param lhs Left operand.
 	 * @param rhs Right operand.
 	 * @return lhs - rhs
 	 */
 	inline vec3 subtract(const vec3& lhs, const vec3& rhs)
 	{
-		__m128 vec1 = _mm_set_ps(0, lhs.z, lhs.y, lhs.x);
-		__m128 vec2 = _mm_set_ps(0, rhs.z, rhs.y, rhs.x);
-		return vec3(_mm_sub_ps(vec1, vec2));
+		return {lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z};
 	}
 
 	/**
@@ -92,7 +86,7 @@ namespace clz::math
 	 */
 	inline vec3 scalar_product(const vec3& lhs, const float scalar)
 	{
-		return vec3(lhs.x * scalar, lhs.y * scalar, lhs.z * scalar);
+		return {lhs.x * scalar, lhs.y * scalar, lhs.z * scalar};
 	}
 
 	/**
@@ -103,7 +97,7 @@ namespace clz::math
 	 */
 	inline vec3 component_product(const vec3& lhs, const vec3& rhs)
 	{
-		return vec3(lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z);
+		return {lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z};
 	}
 
 	/**
@@ -112,9 +106,19 @@ namespace clz::math
 	 * @param rhs Right operand.
 	 * @return Scalar dot product of lhs and rhs.
 	 */
-	inline float dot_product(const vec3& lhs, const vec3& rhs)
+	inline float dot(const vec3& lhs, const vec3& rhs)
 	{
 		return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z;
+	}
+
+	inline vec3 cross(const vec3& lhs, const vec3& rhs)
+	{
+		return
+		{
+			lhs.y * rhs.z - lhs.z * rhs.y,
+			lhs.z * rhs.x - lhs.x * rhs.z,
+			lhs.x * rhs.y - lhs.y * rhs.x
+		};
 	}
 
 	/**
@@ -125,7 +129,6 @@ namespace clz::math
 	inline float getLength(const vec3& lhs)
 	{
 		__m128 vec = _mm_set_ps(0, lhs.z, lhs.y, lhs.x);
-		// dot(v, v) = squared length, then sqrt
 		const __m128 lSquare = _mm_dp_ps(vec, vec, 0x71);
 		return _mm_cvtss_f32(_mm_sqrt_ss(lSquare));
 	}
@@ -134,8 +137,8 @@ namespace clz::math
 	 * @brief Returns a normalized (unit length) copy of a vec3.
 	 * @param lhs Source vector.
 	 * @return lhs scaled to unit length.
-	 * @note Uses _mm_rsqrt_ps — fast approximation with ~0.037% max error.
-	 * @note Also, not recommended if you want high precision
+	 * @note Uses _mm_rsqrt_ps. Fast approximation but
+	 * not recommended if you want high precision
 	 */
 	inline vec3 normalize(const vec3& lhs)
 	{
@@ -144,5 +147,33 @@ namespace clz::math
 		const __m128 length = _mm_dp_ps(vec, vec, 0x77);
 		return vec3(_mm_mul_ps(vec, _mm_rsqrt_ps(length)));
 	}
+
+
+	struct Axis
+	{
+		union
+		{
+			vec3 vector;
+			struct { float x, y, z; };
+		};
+
+		Axis(const float a, const float b, const float c)
+		: vector(vec3(a, b, c))
+		{
+		}
+
+		static Axis X()
+		{
+			return Axis(1.0f, 0.0f, 0.0f);
+		}
+		static Axis Y()
+		{
+			return Axis(0.0f, 1.0f, 0.0f);
+		}
+		static Axis Z()
+		{
+			return Axis(0.0f, 0.0f, 1.0f);
+		}
+	};
 
 } // namespace clz::math

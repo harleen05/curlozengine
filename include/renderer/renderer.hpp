@@ -15,17 +15,17 @@ namespace clz::renderer
 {
 	/**
 	 * @brief Initializes all the vulkan handles divided into context's
-	 *
+	 * @return true if everything went well, else calls clz::log::error and return false
 	 * @note logs an error and returns on early failure
 	 */
-	void init();
+	bool init();
 
 	/**
 	 * @brief updates the renderer
 	 *
 	 * @note logs an error if swapchain is outdated or some rare event happens
 	 */
-	void update(float deltaTime);
+	void update();
 
 	/**
 	 * @brief Destroys all the vulkan context's

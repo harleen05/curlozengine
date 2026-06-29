@@ -3,13 +3,16 @@
  * @author curl0z
  * @brief Implementation of the main loop of the frame
  */
+
 #include "renderer/mainloop.hpp"
 #include "core/logs.hpp"
-#include "renderer/image.hpp"
 #include "renderer/renderer.hpp"
-#include "renderer/test.hpp"
-#include "renderer/variables.hpp"
-#include <vulkan/vulkan_core.h>
+#include "renderer/shaderdata/descriptor/descriptor.hpp"
+#include "renderer/shaderdata/pushconstant/mainpipeline.hpp"
+#include "renderer/shaderdata/shaderdata.hpp"
+#include "renderer/utility/image.hpp"
+#include "renderer/vk_types.hpp"
+#include "renderer/assets/drawmodel.hpp"
 
 namespace clz::renderer
 {
@@ -65,24 +68,35 @@ namespace clz::renderer
 		    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 0,
 		    VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT_KHR,
 		    VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT_KHR,
-		    VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT_KHR, commandBuffer);
+		    VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT_KHR,
+		    VK_IMAGE_ASPECT_COLOR_BIT, commandBuffer);
 
 		const VkRenderingAttachmentInfoKHR colorAttachment{
-		    .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR,
-		    .pNext = nullptr,
-		    .imageView = r_swapchainContext.imageViews[imageIndex],
-		    .imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-		    .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
-		    .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-		    .clearValue = {{0.0f, 0.0f, 0.0f, 1.0f}}};
+			.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR,
+			.pNext = nullptr,
+			.imageView = r_swapchainContext.imageViews[imageIndex],
+			.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+			.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+			.clearValue = {{0.0f, 0.0f, 0.0f, 1.0f}}};
+
+		VkRenderingAttachmentInfoKHR depthAttachment = {};
+		depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+		depthAttachment.imageView = r_swapchainContext.depthImageView;
+		depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+		depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		depthAttachment.clearValue.depthStencil.depth = 1.0f;
+
 		const VkRenderingInfoKHR renderingInfo{
-		    .sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR,
-		    .pNext = nullptr,
-		    .flags = 0,
-		    .renderArea = {{0, 0}, r_swapchainContext.extent},
-		    .layerCount = 1,
-		    .colorAttachmentCount = 1,
-		    .pColorAttachments = &colorAttachment};
+			.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR,
+			.pNext = nullptr,
+			.flags = 0,
+			.renderArea = {{0, 0}, r_swapchainContext.extent},
+			.layerCount = 1,
+			.colorAttachmentCount = 1,
+			.pColorAttachments = &colorAttachment,
+			.pDepthAttachment = &depthAttachment};
 		vkCmdBeginRendering(commandBuffer, &renderingInfo);
 
 		const VkViewport viewport{
@@ -100,14 +114,17 @@ namespace clz::renderer
 
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
 				  r_pipelineContext.pipeline);
-		const VkBuffer vertexBuffers[] = {vertexBuffer};
-		constexpr VkDeviceSize offsets[] = {0};
-		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
+
+		updateShaderData(r_currentFrame);
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-					clz::renderer::r_pipelineContext.layout, 0, 1,
-					&descriptorSets[r_currentFrame], 0, nullptr);
-		vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+				clz::renderer::r_pipelineContext.layout, 0, 1,
+				&r_descriptorSets[r_currentFrame], 0, nullptr);
+
+		drawEntitiesMainPipeline(commandBuffer);
+
+		//vkCmdDraw(commandBuffer, 6, 1, 0, 0);
+		//vkCmdDraw(commandBuffer, 6, 1, 6, 0);
 
 		vkCmdEndRendering(commandBuffer);
 
@@ -115,7 +132,8 @@ namespace clz::renderer
 		    r_swapchainContext.images[imageIndex], VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 		    VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT_KHR, 0,
 		    VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT_KHR,
-		    VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT_KHR, commandBuffer);
+		    VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT_KHR,
+		    VK_IMAGE_ASPECT_COLOR_BIT, commandBuffer);
 
 		if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) [[unlikely]]
 		{
@@ -123,13 +141,13 @@ namespace clz::renderer
 		}
 	}
 
-	void submitCommandBuffer(VkCommandBuffer commandBuffer, VkSemaphore imageAvailableSemaphore,
-				 VkSemaphore renderFinishedSemaphore, VkFence inFlightFence)
+	void submitCommandBuffer(VkCommandBuffer commandBuffer, VkSemaphore renderReadySemaphore,
+				 VkSemaphore presentReadySemaphore, VkFence inFlightFence)
 	{
 		const VkSemaphoreSubmitInfoKHR waitSemaphore{
 			.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO_KHR,
 			.pNext = nullptr,
-			.semaphore = imageAvailableSemaphore,
+			.semaphore = renderReadySemaphore,
 			.value = 0,
 			.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT_KHR,
 			.deviceIndex = 0
@@ -139,7 +157,7 @@ namespace clz::renderer
 		const VkSemaphoreSubmitInfoKHR signalSemaphore{
 			.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO_KHR,
 			.pNext = nullptr,
-			.semaphore = renderFinishedSemaphore,
+			.semaphore = presentReadySemaphore,
 			.value = 0,
 			.stageMask = VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT_KHR,
 			.deviceIndex = 0

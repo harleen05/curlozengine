@@ -9,3 +9,5 @@ docs
 shader/triangle.vert.spirv
 shader/triangle.frag.spirv
 
+# Test models
+assets/models/*

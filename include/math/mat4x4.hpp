@@ -7,9 +7,9 @@
  */
 #pragma once
 
-#include "vec3.hpp"
 #include <immintrin.h>
-#include <xmmintrin.h>
+#include "vec3.hpp"
+#include "quat.hpp"
 
 namespace clz::math
 {
@@ -29,7 +29,6 @@ namespace clz::math
 				__m128 r2;
 				__m128 r3;
 			};
-
 			struct
 			{
 				float xx, xy, xz, xw;
@@ -37,7 +36,6 @@ namespace clz::math
 				float zx, zy, zz, zw;
 				float wx, wy, wz, ww;
 			};
-
 			float data[16];
 		};
 
@@ -48,52 +46,66 @@ namespace clz::math
 		}
 
 		/// @brief Initializes Matrix in an identity format
-		mat4(float value)
+		explicit mat4(const float value)
 		    : r0(_mm_set_ps(0.0f, 0.0f, 0.0f, value)),
 		      r1(_mm_set_ps(0.0f, 0.0f, value, 0.0f)),
 		      r2(_mm_set_ps(0.0f, value, 0.0f, 0.0f)),
-		      r3(_mm_set_ps(value, 0.0f, 0.0f, 0.0f))
+		      r3(_mm_set_ps(1.0f, 0.0f, 0.0f, 0.0f))
+		{
+		}
+
+		explicit mat4(const clz::math::vec3& v)
+		    : r0(_mm_set_ps(0.0f, 0.0f, 0.0f, v.x)),
+		      r1(_mm_set_ps(0.0f, 0.0f, v.y, 0.0f)),
+		      r2(_mm_set_ps(0.0f, v.z, 0.0f, 0.0f)),
+		      r3(_mm_set_ps(1.0f, 0.0f, 0.0f, 0.0f))
 		{
 		}
 
 		/// @brief Initializes the 4 __m128 registers
-		mat4(__m128 r0, __m128 r1, __m128 r2, __m128 r3) : r0(r0), r1(r1), r2(r2), r3(r3)
+		mat4(__m128 r0, __m128 r1, __m128 r2, __m128 r3)
+			: r0(r0), r1(r1), r2(r2), r3(r3)
 		{
 		}
 
+		inline void makeIdentity()
+		{
+			r0 = _mm_set_ps(0.0f, 0.0f, 0.0f, 1.0f);
+			r1 = _mm_set_ps(0.0f, 0.0f, 1.0f, 0.0f);
+			r2 = _mm_set_ps(0.0f, 1.0f, 0.0f, 0.0f);
+			r3 = _mm_set_ps(1.0f, 0.0f, 0.0f, 0.0f);
+		}
 		/**
 		 * @brief Returns Addition of two matrices
-		 * @param m1 matrix 1
-		 * @param m2 matrix 2
+		 * @param mat matrix 1
 		 * @return Sum of m1 and m1 matrices
 		 * Takes roughly ~15-20 cycles
 		 */
 		inline mat4 operator+(const mat4& mat) const
 		{
-			mat4 result(r0, r1, r2, r3);
+			mat4 result;
 
-			_mm_add_ps(result.r0, mat.r0);
-			_mm_add_ps(result.r1, mat.r1);
-			_mm_add_ps(result.r2, mat.r2);
-			_mm_add_ps(result.r3, mat.r3);
+			result.r0 = _mm_add_ps(result.r0, mat.r0);
+			result.r1 = _mm_add_ps(result.r1, mat.r1);
+			result.r2 = _mm_add_ps(result.r2, mat.r2);
+			result.r3 = _mm_add_ps(result.r3, mat.r3);
 
 			return result;
 		}
 
 		/**
 		 * @brief Multiplies the matrix with a scalar
-		 * @param m1 matrix
 		 * @param scalar float value
 		 * @return resulting matrix
 		 */
 		mat4 operator*(const float scalar) const
 		{
-			mat4 result(r0, r1, r2, r3);
+			mat4 result;
 
-			_mm_mul_ps(result.r0, _mm_set1_ps(scalar));
-			_mm_mul_ps(result.r1, _mm_set1_ps(scalar));
-			_mm_mul_ps(result.r2, _mm_set1_ps(scalar));
-			_mm_mul_ps(result.r3, _mm_set1_ps(scalar));
+			result.r0 = _mm_mul_ps(result.r0, _mm_set1_ps(scalar));
+			result.r1 = _mm_mul_ps(result.r1, _mm_set1_ps(scalar));
+			result.r2 = _mm_mul_ps(result.r2, _mm_set1_ps(scalar));
+			result.r3 = _mm_mul_ps(result.r3, _mm_set1_ps(scalar));
 
 			return result;
 		}
@@ -139,27 +151,23 @@ namespace clz::math
 			return result;
 		}
 
-		/**
-		 * @brief Adds two matrices
-		 * @param
-		 */
+
 	};
 
 	/**
 	 * @brief Multiplies the matrix with a scalar
-	 * @param m1 mat4 matrix
-	 * @param scalar float value
+	 * @param mat mat4 matrix
 	 * @param scalar float value
 	 * @return resulting matrix
 	 */
 	inline mat4 operator*(const mat4& mat, const float scalar)
 	{
-		mat4 result(mat.r0, mat.r1, mat.r2, mat.r3);
+		mat4 result = mat;
 
-		_mm_mul_ps(result.r0, _mm_set1_ps(scalar));
-		_mm_mul_ps(result.r1, _mm_set1_ps(scalar));
-		_mm_mul_ps(result.r2, _mm_set1_ps(scalar));
-		_mm_mul_ps(result.r3, _mm_set1_ps(scalar));
+		result.r0 = _mm_mul_ps(mat.r0, _mm_set1_ps(scalar));
+		result.r1 = _mm_mul_ps(mat.r1, _mm_set1_ps(scalar));
+		result.r2 = _mm_mul_ps(mat.r2, _mm_set1_ps(scalar));
+		result.r3 = _mm_mul_ps(mat.r3, _mm_set1_ps(scalar));
 
 		return result;
 	}
@@ -187,6 +195,31 @@ namespace clz::math
 	inline mat4 multiply(const mat4& m1, const mat4& m2)
 	{
 		return m1 * m2;
+	}
+
+	inline mat4 makeScaleMatrix(const vec3& scale)
+	{
+		return mat4(scale);
+	}
+
+	inline mat4 makeTranslationMatrix(const vec3& translation)
+	{
+		return {
+			_mm_set_ps(0.0f, 0.0f, 0.0f, 1.0f),
+			_mm_set_ps(0.0f, 0.0f, 1.0f, 0.0f),
+			_mm_set_ps(0.0f, 1.0f, 0.0f, 0.0f),
+			_mm_set_ps(1.0f, translation.z, translation.y, translation.x)
+		    };
+	}
+
+	inline mat4 makeRotationMatrix(const quat& r)
+	{
+		return {
+			_mm_set_ps(0.0f, 2.0f*(r.x*r.z - r.y*r.w), 2.0f*(r.x*r.y + r.z*r.w), 1.0f - 2.0f*(r.y*r.y + r.z*r.z)),
+			_mm_set_ps(0.0f, 2.0f*(r.y*r.z + r.x*r.w), 1.0f - 2.0f*(r.x*r.x + r.z*r.z), 2.0f*(r.x*r.y - r.z*r.w)),
+			_mm_set_ps(0.0f, 1.0f - 2.0f*(r.x*r.x + r.y*r.y), 2.0f*(r.y*r.z - r.x*r.w), 2.0f*(r.x*r.z + r.y*r.w)),
+			_mm_set_ps(1.0f, 0.0f, 0.0f, 0.0f)
+		};
 	}
 
 } // namespace clz::math

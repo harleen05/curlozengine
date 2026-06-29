@@ -7,65 +7,128 @@
  * with entities and their components.
  */
 
+
+#define JSON_HAS_STATIC_RTTI 0
+#define JSON_NOEXCEPTION
+#include <nlohmann/json.hpp>
+
 #include "ecs/scene.hpp"
 #include "config/config.hpp"
 #include "core/logs.hpp"
 #include "ecs/components.hpp"
 #include "ecs/entitymanager.hpp"
-
+#include "renderer/rendercomponent.hpp"
 #include <fstream>
-#include <nlohmann/json.hpp>
+
 
 namespace clz::ecs
 {
-	std::expected<void, std::string> loadEntities()
+	TransformComponent retrieveTransformComponent(const nlohmann::json& componentData);
+	ModelComponent retrieveModelComponent(const std::filesystem::path& path);
+}
+
+namespace clz::ecs
+{
+	bool loadEntities()
 	{
 		clz::log::debug("Loading entities");
 
 		// Read scene file path from config
 		const auto entityFile = clz::config::getString("entity", "file", "");
 		if (std::string(entityFile).empty())
-			return std::unexpected("No entity file specified in config [entity] file");
+		{
+			clz::log::error("No entity file specified in config [entity] file");
+			return false;
+		}
+
 
 		// Parse JSON
 		std::ifstream file(entityFile);
 		if (!file.is_open())
-			return std::unexpected("Could not open entity file: " +
-					       std::string(entityFile));
-
-		auto json = nlohmann::json::parse(file);
+		{
+			clz::log::error("Could not open entity file: " + std::string(entityFile));
+			return false;
+		}
+		const nlohmann::json json = nlohmann::json::parse(file);
+		if (json.is_null())
+		{
+			clz::log::error("Could not parse JSON file: " + std::string(entityFile));
+			return false;
+		}
 
 		// Create entities from JSON
 		for (auto& entityData : json["entities"])
 		{
-			auto entity = createEntity();
+			entity e;
+			if (!entityData.contains("name"))
+			{
+				clz::log::warn("an entity is unnamed");
+				e = createEntity("Unnamed Entity");
+			}
+			else
+			{
+				e = createEntity(entityData["name"]);
+			}
+
 
 			// Attach TransformComponent if present
-			if (entityData["components"].contains("transform"))
+			if (entityData.contains("transform"))
 			{
-				auto& t = entityData["components"]["transform"];
-				TransformComponent transformComponent(
-				    clz::math::vec3(t["position"][0], t["position"][1],
-						    t["position"][2]),
-				    clz::math::vec3(t["rotation"][0], t["rotation"][1],
-						    t["rotation"][2]),
-				    clz::math::vec3(t["scale"][0], t["scale"][1], t["scale"][2]));
+				addComponent<TransformComponent>(e, retrieveTransformComponent(entityData["transform"]));
+			}
 
-				addComponent<TransformComponent>(entity, transformComponent);
+			// Attach ModelComponent if present
+			if (entityData.contains("model"))
+			{
+				if (!hasComponent<TransformComponent>(e))
+				{
+					clz::log::warn("Entity: " + ecs_entityName[e] +
+						"Does not have transform component\nAssigning it identity transform component");
+
+					addComponent<TransformComponent>(e, TransformComponent());
+				}
+
+				addComponent<ModelComponent>(
+					e, retrieveModelComponent(entityData["model"]["path"]));
 			}
 		}
 
-		// Log loaded components
-		auto& componentArray = getComponentArray<TransformComponent>();
-		for (const auto component : componentArray)
+		// Entities loaded flag
+		renderer::flagRenderComponentsLoaded();
+
+		clz::log::info("Loaded all entities");
+		return true;
+	}
+
+
+	TransformComponent retrieveTransformComponent(const nlohmann::basic_json<>& componentData)
+	{
+		const clz::math::quat q(
+			componentData["rotation"][0],
+			componentData["rotation"][1],
+			componentData["rotation"][2],
+			componentData["rotation"][3]);
+		const clz::math::vec3 t(
+			componentData["position"][0],
+			componentData["position"][1],
+			componentData["position"][2]);
+		const clz::math::vec3 s(
+			componentData["scale"][0],
+			componentData["scale"][1],
+			componentData["scale"][2]);
+
+		return {q, t, s};
+	}
+
+	ModelComponent retrieveModelComponent(const std::filesystem::path& path)
+	{
+		const ModelComponent modelComponent = renderer::createModelComponent(path);
+		if (modelComponent.modelID == renderer::NULL_ASSET)
 		{
-			const auto pos = component.position;
-			clz::log::debug("Entity loaded at position: " + std::to_string(pos.x) +
-					", " + std::to_string(pos.y) + ", " +
-					std::to_string(pos.z));
+			clz::log::error("Could not load model component");
 		}
 
-		return {};
+		return modelComponent;
 	}
 
 } // namespace clz::ecs

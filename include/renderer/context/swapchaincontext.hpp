@@ -6,17 +6,27 @@
  */
 #pragma once
 
-#include <expected>
-#include <string>
-
 namespace clz::renderer
 {
+	/**
+	 * @brief Initializes the swapchain context.
+	 * ie all the device handles.
+	 * Can view all of them in context.hpp
+	 */
+	bool initSwapchainContext();
+
 	/**
 	 * @brief Creates swapchain, initializes all the
 	 * images and image views
 	 * and sets all the other swapchain settings
 	 */
-	std::expected<void, std::string> createSwapchain();
+	bool createSwapchain();
+
+	/**
+	 * @brief Creates Depth resources - Depth Image and Image View
+	 * @return True if depth resources creation was succesful, false otherwise
+	 */
+	bool createDepthResources();
 
 	/**
 	 * @brief Recreates the swapchain.
@@ -28,10 +38,20 @@ namespace clz::renderer
 	 * whenever window is resized
 	 */
 	void recreateSwapchainContext();
+}
+
+namespace clz::renderer
+{
+	/**
+	 * @brief Destroys the swapchain context.
+	 */
+	void destroySwapchainContext();
 
 	/**
 	 * @brief Destroys the all the handles in
 	 * the swapchain context
 	 */
 	void destroySwapchain();
+
+	void destroyDepthResources();
 } // namespace clz::renderer

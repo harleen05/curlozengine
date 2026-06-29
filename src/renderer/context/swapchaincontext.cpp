@@ -4,48 +4,70 @@
  * @brief Implementation of the initialization
  * and cleanup of swapchain context
  */
-#include "renderer/swapchaincontext.hpp"
+
+#include "renderer/context/swapchaincontext.hpp"
+#include "renderer/utility/image.hpp"
+#include "renderer/utility/memory.hpp"
 #include "config/config.hpp"
 #include "core/logs.hpp"
-#include "renderer/cleaners.hpp"
-#include "renderer/initializers.hpp"
-#include "renderer/variables.hpp"
+#include "renderer/vk_types.hpp"
 #include "window/window.hpp"
 #include <string>
 
 namespace clz::renderer
 {
-	std::expected<void, std::string> createSwapchain()
+	bool initSwapchainContext()
+	{
+		if (!createSwapchain())
+		{
+			clz::log::error("Failed to create swapchain");
+			clz::log::error("Could not initialize swapchain context");
+			return false;
+		}
+
+		if (!createDepthResources())
+		{
+			clz::log::error("Failed to create depth resources");
+			clz::log::error("Could not initialize swapchain context");
+			return false;
+		}
+
+		clz::log::info("Initialized swapchain context");
+		return true;
+	}
+
+	bool createSwapchain()
 	{
 		VkSurfaceCapabilitiesKHR capabilities;
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(r_deviceContext.gpu,
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(r_deviceContext.physicalDevice,
 							  r_deviceContext.surface, &capabilities);
 
 		uint32_t formatCount = 0;
-		vkGetPhysicalDeviceSurfaceFormatsKHR(r_deviceContext.gpu, r_deviceContext.surface,
-						     &formatCount, nullptr);
+		vkGetPhysicalDeviceSurfaceFormatsKHR(r_deviceContext.physicalDevice,
+				r_deviceContext.surface, &formatCount, nullptr);
 		if (formatCount == 0)
 		{
 			clz::log::error("Uhh.... Selected gpu does not have any format lol");
-			return std::unexpected("Uhh.... Selected gpu does not have any format lol");
+			clz::log::error("Uhh.... Selected gpu does not have any format lol");
+			return false;
 		}
 		std::vector<VkSurfaceFormatKHR> formats(formatCount);
-		vkGetPhysicalDeviceSurfaceFormatsKHR(r_deviceContext.gpu, r_deviceContext.surface,
+		vkGetPhysicalDeviceSurfaceFormatsKHR(r_deviceContext.physicalDevice, r_deviceContext.surface,
 						     &formatCount, formats.data());
 
 		// 1.2 get presentation modes;
 		uint32_t presentModeCount = 0;
 		vkGetPhysicalDeviceSurfacePresentModesKHR(
-		    r_deviceContext.gpu, r_deviceContext.surface, &presentModeCount, nullptr);
+		    r_deviceContext.physicalDevice, r_deviceContext.surface, &presentModeCount, nullptr);
 		if (presentModeCount == 0)
 		{
 			clz::log::error("renderer/initializers.cpp: Selected physical device does "
 					"not have a valid presentation mode");
-			return std::unexpected("renderer/initializers.cpp: Selected physical "
-					       "device does not have a valid presentation mode");
+
+			return false;
 		}
 		std::vector<VkPresentModeKHR> presentModes(presentModeCount);
-		vkGetPhysicalDeviceSurfacePresentModesKHR(r_deviceContext.gpu,
+		vkGetPhysicalDeviceSurfacePresentModesKHR(r_deviceContext.physicalDevice,
 							  r_deviceContext.surface,
 							  &presentModeCount, presentModes.data());
 
@@ -138,7 +160,7 @@ namespace clz::renderer
 					 &r_swapchainContext.swapchain) != VK_SUCCESS) [[unlikely]]
 		{
 			clz::log::error("could not create swapchain sadly :(");
-			return std::unexpected("could not create swapchain");
+			return false;
 		}
 
 		vkGetSwapchainImagesKHR(r_deviceContext.device, r_swapchainContext.swapchain,
@@ -170,35 +192,170 @@ namespace clz::renderer
 					      &r_swapchainContext.imageViews[i]) != VK_SUCCESS)
 			{
 				clz::log::error(
-				    "renderer/initializers.cpp: Could not create image views");
-				return std::unexpected("could not create image views");
+				    "Could not create swapchain image views");
+				return false;
 			}
 		}
 
 		clz::log::info("renderer: created swapchain");
-		return {};
+		return true;
+	}
+
+	VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, const VkImageTiling tiling,
+					const VkFormatFeatureFlags features)
+	{
+		for (auto& format : candidates)
+		{
+			VkFormatProperties formatProperties;
+			vkGetPhysicalDeviceFormatProperties(r_deviceContext.physicalDevice, format, &formatProperties);
+
+			switch (tiling)
+			{
+			case VK_IMAGE_TILING_OPTIMAL:
+				if ((formatProperties.optimalTilingFeatures & features) == features)
+				{
+					clz::log::info("Optimal depth format found");
+					return format;
+				}
+				break;
+
+			case VK_IMAGE_TILING_LINEAR:
+				if ((formatProperties.linearTilingFeatures & features) == features)
+				{
+					clz::log::info("linear depth format found");
+					return format;
+				}
+				break;
+
+			default:
+				clz::log::error("A requested depth format is not available");
+			}
+		}
+		clz::log::error("Could not find any supported depth format");
+		return VK_FORMAT_UNDEFINED;
+	}
+	bool createDepthResources()
+	{
+		r_swapchainContext.depthFormat = findSupportedFormat({VK_FORMAT_D32_SFLOAT},
+			VK_IMAGE_TILING_OPTIMAL,VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+
+		if (r_swapchainContext.depthFormat == VK_FORMAT_UNDEFINED)
+		{
+			clz::log::error("Could not find depth format");
+			return false;
+		}
+
+		if (!clz::renderer::createImage(r_swapchainContext.depthImage, "Depth Image",
+			r_swapchainContext.extent.width, r_swapchainContext.extent.height,
+			r_swapchainContext.depthFormat, VK_IMAGE_TILING_OPTIMAL,
+			VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 0))
+		{
+			clz::log::error("Could not create depth image");
+			return false;
+		}
+
+
+		VkMemoryRequirements memRequirements;
+		vkGetImageMemoryRequirements(clz::renderer::r_deviceContext.device,
+					r_swapchainContext.depthImage, &memRequirements);
+
+		VkMemoryAllocateInfo memAllocInfo = {};
+		memAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+		memAllocInfo.allocationSize = memRequirements.size;
+		memAllocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+		if (vkAllocateMemory(clz::renderer::r_deviceContext.device, &memAllocInfo,
+			nullptr, &r_swapchainContext.depthDeviceMemory) != VK_SUCCESS)
+		{
+			clz::log::error("vulkan could not create depth memory");
+			return false;
+		}
+
+		vkBindImageMemory(clz::renderer::r_deviceContext.device, r_swapchainContext.depthImage, r_swapchainContext.depthDeviceMemory, 0);
+
+		if (!createImageView(r_swapchainContext.depthImageView, "Depth image view",
+			r_swapchainContext.depthImage, r_swapchainContext.depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT))
+		{
+			clz::log::error("Could not create depth image view");
+			return false;
+		}
+
+		VkCommandBufferAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandPool = clz::renderer::r_commandContext.commandPool;
+		allocInfo.commandBufferCount = 1;
+
+		VkCommandBuffer commandBuffer;
+		vkAllocateCommandBuffers(clz::renderer::r_deviceContext.device, &allocInfo, &commandBuffer);
+
+		VkCommandBufferBeginInfo beginInfo{};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+
+		transition_image_layout(r_swapchainContext.depthImage,
+			VK_IMAGE_LAYOUT_UNDEFINED,
+			VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+			VK_PIPELINE_STAGE_2_NONE,
+			VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
+			VK_ACCESS_2_NONE,
+			VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+			VK_IMAGE_ASPECT_DEPTH_BIT, commandBuffer);
+
+		vkEndCommandBuffer(commandBuffer);
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+
+		vkQueueSubmit(clz::renderer::r_deviceContext.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+		vkQueueWaitIdle(clz::renderer::r_deviceContext.graphicsQueue);
+
+		clz::log::info("Created depth resources");
+		return true;
 	}
 
 	void recreateSwapchainContext()
 	{
 		vkDeviceWaitIdle(r_deviceContext.device);
-
 		destroySwapchainContext();
-		if (const auto result = initSwapchainContext(); !result) [[unlikely]]
+
+		if (!initSwapchainContext()) [[unlikely]]
 		{
 			clz::log::error("Mid loop, failed to recreate swapchain");
 		}
 	}
+}
+
+namespace clz::renderer
+{
+	void destroySwapchainContext()
+	{
+		destroyDepthResources();
+		destroySwapchain();
+		clz::log::info("destroyed swapchain context");
+	}
 
 	void destroySwapchain()
 	{
-		for (const auto imageView : r_swapchainContext.imageViews)
+		for (const auto& imageView : r_swapchainContext.imageViews)
 		{
 			vkDestroyImageView(r_deviceContext.device, imageView, nullptr);
 		}
 		vkDestroySwapchainKHR(r_deviceContext.device, r_swapchainContext.swapchain,
 				      nullptr);
 
-		clz::log::info("renderer: destroyed swapchain context");
+		clz::log::info("destroyed swapchain");
+	}
+
+	void destroyDepthResources()
+	{
+		vkDestroyImageView(r_deviceContext.device, r_swapchainContext.depthImageView, nullptr);
+		vkDestroyImage(r_deviceContext.device, r_swapchainContext.depthImage, nullptr);
+		vkFreeMemory(r_deviceContext.device, r_swapchainContext.depthDeviceMemory, nullptr);
+
+		clz::log::info("destroyed depth resources");
 	}
 } // namespace clz::renderer

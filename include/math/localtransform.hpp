@@ -2,57 +2,41 @@
 
 #include "mat4x4.hpp"
 #include "vec3.hpp"
-
-#ifdef CLZ_DEBUG
-#include "core/assert.hpp"
-#endif
+#include "quat.hpp"
+#include <cmath>
 
 namespace clz::math
 {
-	inline void makeIdentity(mat4& mat)
+	inline vec3 scale(const vec3& v, const vec3& scale)
 	{
-		mat = mat4(1.0f);
-	}
-	inline void scale(mat4& mat, const vec3& vec)
-	{
-
-#ifdef CLZ_DEBUG
-		clz::CLZ_ASSERT(mat.xx == 1.0f && mat.yy == 1.0f && mat.zz == 1.0f &&
-				    mat.ww == 1.0f,
-				"matrix not made identity before applying local transforms");
-#endif
-
-		mat.xx = vec.x;
-		mat.yy = vec.y;
-		mat.zz = vec.z;
+		return component_product(v, scale);
 	}
 
-	inline void translate(mat4& mat, const vec3& vec)
+	inline vec3 translate(const vec3& v, const vec3& translation)
 	{
-		mat.wx = vec.x;
-		mat.wy = vec.y;
-		mat.wz = vec.z;
+		return add(v, translation);
 	}
 
-	struct Axis
+	constexpr float DEG_TO_RAD = 3.14159265358979323846 / 180;
+
+	inline float radians(const float degree)
 	{
-		vec3 vector;
+		return degree * DEG_TO_RAD;
+	}
 
-		Axis(float x, float y, float z) : vector(vec3(x, y, z))
-		{
-		}
+	inline quat rotate(const quat& q, const float rad, const Axis& axis)
+	{
+		const float half = rad * 0.5f;
+		const float s = std::sin(half);
 
-		static Axis X()
-		{
-			return Axis(1.0f, 0.0f, 0.0f);
-		}
-		static Axis Y()
-		{
-			return Axis(0.0f, 1.0f, 0.0f);
-		}
-		static Axis Z()
-		{
-			return Axis(0.0f, 0.0f, 1.0f);
-		}
-	};
+		const quat delta(
+			std::cos(half),
+			axis.x * s,
+			axis.y * s,
+			axis.z * s);
+
+		return q * delta;
+	}
+
+
 } // namespace clz::math

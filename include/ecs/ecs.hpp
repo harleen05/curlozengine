@@ -12,6 +12,7 @@
 
 #pragma once
 
+
 namespace clz::ecs
 {
 	/**
@@ -20,7 +21,7 @@ namespace clz::ecs
 	 * Clears the registry, then calls loadEntities() to populate it
 	 * from the JSON file specified in config [entity] file.
 	 */
-	void init();
+	bool init();
 
 	/**
 	 * @brief Runs all ECS systems for one frame.
