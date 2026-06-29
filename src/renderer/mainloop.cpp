@@ -3,13 +3,16 @@
  * @author curl0z
  * @brief Implementation of the main loop of the frame
  */
+
 #include "renderer/mainloop.hpp"
 #include "core/logs.hpp"
-#include "renderer/cleaners.hpp"
-#include "renderer/image.hpp"
-#include "renderer/initializers.hpp"
-#include "renderer/swapchaincontext.hpp"
-#include "renderer/variables.hpp"
+#include "renderer/renderer.hpp"
+#include "renderer/shaderdata/descriptor/descriptor.hpp"
+#include "renderer/shaderdata/pushconstant/mainpipeline.hpp"
+#include "renderer/shaderdata/shaderdata.hpp"
+#include "renderer/utility/image.hpp"
+#include "renderer/vk_types.hpp"
+#include "renderer/assets/drawmodel.hpp"
 
 namespace clz::renderer
 {
@@ -18,9 +21,6 @@ namespace clz::renderer
 		if (vkWaitForFences(renderer::r_deviceContext.device, 1, &fence, VK_TRUE,
 				    UINT64_MAX) != VK_SUCCESS) [[unlikely]]
 			clz::log::error("failed to wait for fence");
-
-		if (vkResetFences(r_deviceContext.device, 1, &fence) != VK_SUCCESS) [[unlikely]]
-			clz::log::error("Failed to reset fence");
 	}
 
 	void acquireNextImage(VkSemaphore semaphore, uint32_t& rImageIndex)
@@ -31,8 +31,7 @@ namespace clz::renderer
 		if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR || acquireResult == VK_SUBOPTIMAL_KHR)
 		    [[unlikely]]
 		{
-			clz::log::warn("Swapchain is outdated, recreating it");
-			recreateSwapchain();
+			r_recreateSwapchain = true;
 		}
 		else if (acquireResult != VK_SUCCESS) [[unlikely]]
 		{
@@ -40,15 +39,11 @@ namespace clz::renderer
 		}
 	}
 
-	void recreateSwapchain()
+	void resetFence(VkFence fence)
 	{
-		vkDeviceWaitIdle(r_deviceContext.device);
-
-		destroySwapchainContext();
-		auto swapchainResult = initSwapchainContext();
-		if (!swapchainResult) [[unlikely]]
+		if (vkResetFences(r_deviceContext.device, 1, &fence) != VK_SUCCESS) [[unlikely]]
 		{
-			clz::log::error("Mid loop, failed to recreate swapchain");
+			clz::log::error("Failed to reset fence");
 		}
 	}
 
@@ -73,21 +68,35 @@ namespace clz::renderer
 		    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 0,
 		    VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT_KHR,
 		    VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT_KHR,
-		    VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT_KHR, commandBuffer);
+		    VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT_KHR,
+		    VK_IMAGE_ASPECT_COLOR_BIT, commandBuffer);
 
 		const VkRenderingAttachmentInfoKHR colorAttachment{
-		    .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR,
-		    .imageView = r_swapchainContext.imageViews[imageIndex],
-		    .imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-		    .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
-		    .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-		    .clearValue = {{0.0f, 0.0f, 0.0f, 1.0f}}};
+			.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR,
+			.pNext = nullptr,
+			.imageView = r_swapchainContext.imageViews[imageIndex],
+			.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+			.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+			.clearValue = {{0.0f, 0.0f, 0.0f, 1.0f}}};
+
+		VkRenderingAttachmentInfoKHR depthAttachment = {};
+		depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+		depthAttachment.imageView = r_swapchainContext.depthImageView;
+		depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+		depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		depthAttachment.clearValue.depthStencil.depth = 1.0f;
+
 		const VkRenderingInfoKHR renderingInfo{
-		    .sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR,
-		    .renderArea = {{0, 0}, r_swapchainContext.extent},
-		    .layerCount = 1,
-		    .colorAttachmentCount = 1,
-		    .pColorAttachments = &colorAttachment};
+			.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR,
+			.pNext = nullptr,
+			.flags = 0,
+			.renderArea = {{0, 0}, r_swapchainContext.extent},
+			.layerCount = 1,
+			.colorAttachmentCount = 1,
+			.pColorAttachments = &colorAttachment,
+			.pDepthAttachment = &depthAttachment};
 		vkCmdBeginRendering(commandBuffer, &renderingInfo);
 
 		const VkViewport viewport{
@@ -106,7 +115,16 @@ namespace clz::renderer
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
 				  r_pipelineContext.pipeline);
 
-		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+
+		updateShaderData(r_currentFrame);
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+				clz::renderer::r_pipelineContext.layout, 0, 1,
+				&r_descriptorSets[r_currentFrame], 0, nullptr);
+
+		drawEntitiesMainPipeline(commandBuffer);
+
+		//vkCmdDraw(commandBuffer, 6, 1, 0, 0);
+		//vkCmdDraw(commandBuffer, 6, 1, 6, 0);
 
 		vkCmdEndRendering(commandBuffer);
 
@@ -114,7 +132,8 @@ namespace clz::renderer
 		    r_swapchainContext.images[imageIndex], VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 		    VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT_KHR, 0,
 		    VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT_KHR,
-		    VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT_KHR, commandBuffer);
+		    VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT_KHR,
+		    VK_IMAGE_ASPECT_COLOR_BIT, commandBuffer);
 
 		if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) [[unlikely]]
 		{
@@ -122,30 +141,44 @@ namespace clz::renderer
 		}
 	}
 
-	void submitCommandBuffer(VkCommandBuffer commandBuffer, VkSemaphore imageAvailableSemaphore,
-				 VkSemaphore renderFinishedSemaphore, VkFence inFlightFence)
+	void submitCommandBuffer(VkCommandBuffer commandBuffer, VkSemaphore renderReadySemaphore,
+				 VkSemaphore presentReadySemaphore, VkFence inFlightFence)
 	{
 		const VkSemaphoreSubmitInfoKHR waitSemaphore{
-		    .sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO_KHR,
-		    .semaphore = imageAvailableSemaphore,
-		    .stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT_KHR};
+			.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO_KHR,
+			.pNext = nullptr,
+			.semaphore = renderReadySemaphore,
+			.value = 0,
+			.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT_KHR,
+			.deviceIndex = 0
+		};
+
 
 		const VkSemaphoreSubmitInfoKHR signalSemaphore{
-		    .sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO_KHR,
-		    .semaphore = renderFinishedSemaphore,
-		    .stageMask = VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT_KHR};
+			.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO_KHR,
+			.pNext = nullptr,
+			.semaphore = presentReadySemaphore,
+			.value = 0,
+			.stageMask = VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT_KHR,
+			.deviceIndex = 0
+		};
+
 
 		VkCommandBufferSubmitInfoKHR cmdSubmitInfo{};
 		cmdSubmitInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO_KHR;
 		cmdSubmitInfo.commandBuffer = commandBuffer;
 
-		const VkSubmitInfo2KHR submitInfo{.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2_KHR,
-						  .waitSemaphoreInfoCount = 1,
-						  .pWaitSemaphoreInfos = &waitSemaphore,
-						  .commandBufferInfoCount = 1,
-						  .pCommandBufferInfos = &cmdSubmitInfo,
-						  .signalSemaphoreInfoCount = 1,
-						  .pSignalSemaphoreInfos = &signalSemaphore};
+		const VkSubmitInfo2KHR submitInfo{
+			.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2_KHR,
+			.pNext = nullptr,
+			.flags = 0,
+			.waitSemaphoreInfoCount = 1,
+			.pWaitSemaphoreInfos = &waitSemaphore,
+			.commandBufferInfoCount = 1,
+			.pCommandBufferInfos = &cmdSubmitInfo,
+			.signalSemaphoreInfoCount = 1,
+			.pSignalSemaphoreInfos = &signalSemaphore
+		};
 
 		if (vkQueueSubmit2(r_deviceContext.graphicsQueue, 1, &submitInfo, inFlightFence) !=
 		    VK_SUCCESS) [[unlikely]]
@@ -156,17 +189,18 @@ namespace clz::renderer
 
 	void present(VkSemaphore semaphore, uint32_t imageIndex)
 	{
-		const VkPresentInfoKHR presentInfo{.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
-						   .waitSemaphoreCount = 1,
-						   .pWaitSemaphores = &semaphore,
-						   .swapchainCount = 1,
-						   .pSwapchains = &r_swapchainContext.swapchain,
-						   .pImageIndices = &imageIndex};
+		VkPresentInfoKHR presentInfo = {};
+		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+		presentInfo.waitSemaphoreCount = 1;
+		presentInfo.pWaitSemaphores = &semaphore;
+		presentInfo.swapchainCount = 1;
+		presentInfo.pSwapchains = &r_swapchainContext.swapchain,
+		presentInfo.pImageIndices = &imageIndex;
 
-		if (vkQueuePresentKHR(r_deviceContext.presentQueue, &presentInfo) != VK_SUCCESS)
-		    [[unlikely]]
-		{
-			clz::log::error("renderer/mainloop: vkQueuePresent failed");
-		}
+		if (const VkResult result = vkQueuePresentKHR(r_deviceContext.presentQueue, &presentInfo);
+		    result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) [[unlikely]]
+			r_recreateSwapchain = true;
+		else if (result != VK_SUCCESS) [[unlikely]]
+			clz::log::error("present failed");
 	}
 } // namespace clz::renderer

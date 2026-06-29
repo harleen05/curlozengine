@@ -54,6 +54,50 @@ namespace clz::math
 		vec4(const __m128 xmm) : xmm(xmm)
 		{
 		}
+
+		/**
+		 * @brief operator overloaded Component-wise addition of two vec4s.
+		 * @param lhs Left operand.
+		 * @param rhs Right operand.
+		 * @return lhs + rhs
+		 */
+		inline vec4 operator+(const vec4& otherVec) const
+		{
+			return vec4(_mm_add_ps(xmm, otherVec.xmm));
+		}
+
+		/**
+		 * @brief operator overloaded Component-wise subtraction of two vec4s.
+		 * @param lhs Left operand.
+		 * @param rhs Right operand.
+		 * @return lhs - rhs
+		 */
+		inline vec4 operator-(const vec4& otherVec) const
+		{
+			return vec4(_mm_sub_ps(xmm, otherVec.xmm));
+		}
+
+		/**
+		 * @brief Operator overloaded Multiplies all components of a vec4 by a scalar.
+		 * @param lhs Source vector.
+		 * @param scalar Scalar multiplier.
+		 * @return lhs * scalar
+		 */
+		inline vec4 operator*(const float& scalar) const
+		{
+			return vec4(_mm_mul_ps(xmm, _mm_set1_ps(scalar)));
+		}
+
+		/**
+		 * @brief operator overloaded Component-wise multiplication of two vec4s.
+		 * @param lhs Left operand.
+		 * @param rhs Right operand.
+		 * @return lhs * rhs (per component)
+		 */
+		inline vec4 operator*(const vec4& otherVec) const
+		{
+			return vec4(_mm_mul_ps(xmm, otherVec.xmm));
+		}
 	};
 
 	/**
@@ -64,7 +108,7 @@ namespace clz::math
 	 */
 	inline vec4 add(const vec4& lhs, const vec4& rhs)
 	{
-		return vec4(_mm_add_ps(lhs.xmm, rhs.xmm));
+		return lhs + rhs;
 	}
 
 	/**
@@ -75,7 +119,7 @@ namespace clz::math
 	 */
 	inline vec4 subtract(const vec4& lhs, const vec4& rhs)
 	{
-		return vec4(_mm_sub_ps(lhs.xmm, rhs.xmm));
+		return lhs - rhs;
 	}
 
 	/**
@@ -86,7 +130,7 @@ namespace clz::math
 	 */
 	inline vec4 scalar_product(const vec4& lhs, const float scalar)
 	{
-		return vec4(_mm_mul_ps(lhs.xmm, _mm_set1_ps(scalar)));
+		return lhs * scalar;
 	}
 
 	/**
@@ -97,7 +141,7 @@ namespace clz::math
 	 */
 	inline vec4 component_product(const vec4& lhs, const vec4& rhs)
 	{
-		return vec4(_mm_mul_ps(lhs.xmm, rhs.xmm));
+		return lhs * rhs;
 	}
 
 	/**

@@ -4,22 +4,39 @@
  * @brief Implementation of the initialization
  * and cleanup of pipeline context
  */
-#include "renderer/pipelinecontext.hpp"
+
+#include "renderer/context/pipelinecontext.hpp"
 #include "core/logs.hpp"
-#include "renderer/variables.hpp"
+#include "renderer/shaderdata/bufferarray/uvbuffer.hpp"
+#include "renderer/shaderdata/bufferarray/vertexbuffer.hpp"
+#include "renderer/shaderdata/descriptor/descriptor.hpp"
+#include "renderer/shaderdata/pushconstant/mainpipeline.hpp"
+#include "renderer/vk_types.hpp"
 #include <fstream>
 #include <vector>
 #include <vulkan/vulkan.h>
 
 namespace clz::renderer
 {
-	std::expected<void, std::string>
-	createShaderModules(PipelineContext& rPipelineContext,
-			    const std::string_view vertexShaderLocation,
-			    const std::string_view fragmentShaderLocation)
+	bool initPipelineContext()
+	{
+		if (!createMainPipeline())
+		{
+			clz::log::error("Could not create main pipeline");
+			clz::log::error("Could initialize pipeline context");
+			return false;
+		}
+
+		clz::log::info("creating pipeline context");
+		return true;
+	}
+
+	bool createShaderModules(PipelineContext& rPipelineContext,
+				const std::string& vertexShaderLocation,
+				const std::string& fragmentShaderLocation)
 	{
 		// Loading Shaders
-		std::ifstream vertex_file(std::string(vertexShaderLocation),
+		std::ifstream vertex_file(vertexShaderLocation,
 					  std::ios::ate | std::ios::binary);
 		std::ifstream frag_file(std::string(fragmentShaderLocation),
 					std::ios::ate | std::ios::binary);
@@ -34,13 +51,13 @@ namespace clz::renderer
 					std::string(fragmentShaderLocation));
 		}
 
-		size_t vertexFileSize = (size_t)vertex_file.tellg();
+		auto vertexFileSize = vertex_file.tellg();
 		std::vector<char> vertexShaderCode(vertexFileSize);
 		vertex_file.seekg(0);
-		vertex_file.read(vertexShaderCode.data(), vertexFileSize);
+		vertex_file.read(vertexShaderCode.data(), (vertexFileSize));
 		vertex_file.close();
 
-		size_t fragFileSize = (size_t)frag_file.tellg();
+		auto fragFileSize = frag_file.tellg();
 		std::vector<char> fragShaderCode(fragFileSize);
 		frag_file.seekg(0);
 		frag_file.read(fragShaderCode.data(), fragFileSize);
@@ -57,8 +74,8 @@ namespace clz::renderer
 		{
 			clz::log::error("Could not create vertex shader module" +
 					std::string(vertexShaderLocation));
-			return std::unexpected("Could not create vertex shader module" +
-					       std::string(vertexShaderLocation));
+
+			return false;
 		}
 
 		VkShaderModuleCreateInfo fragInfo = {};
@@ -70,16 +87,16 @@ namespace clz::renderer
 		{
 			clz::log::error("Could not create fragment shader module" +
 					std::string(fragmentShaderLocation));
-			return std::unexpected("Could not create vertex shader module" +
-					       std::string(fragmentShaderLocation));
+
+			return false;
 		}
 
-		clz::log::debug("created shader modules: " + std::string(vertexShaderLocation) +
+		clz::log::info("created shader modules: " + std::string(vertexShaderLocation) +
 				" and " + std::string(fragmentShaderLocation));
-		return {};
+		return true;
 	}
 
-	std::expected<void, std::string> createMainPipeline()
+	bool createMainPipeline()
 	{
 		// Create shaders modules
 		auto shaderModuleResult =
@@ -87,8 +104,9 @@ namespace clz::renderer
 					"shaders/triangle.frag.spirv");
 		if (!shaderModuleResult) [[unlikely]]
 		{
-			clz::log::error(shaderModuleResult.error());
-			return std::unexpected(shaderModuleResult.error());
+			clz::log::error("Could not create shader modules for main pipeline");
+			clz::log::error("Could not create main pipeline");
+			return false;
 		}
 		// Shader Create Info
 		VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
@@ -116,12 +134,26 @@ namespace clz::renderer
 		dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
 		dynamicState.pDynamicStates = dynamicStates.data();
 
-		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-		vertexInputInfo.vertexBindingDescriptionCount = 0;
-		vertexInputInfo.pVertexBindingDescriptions = nullptr; // Optional
-		vertexInputInfo.vertexAttributeDescriptionCount = 0;
-		vertexInputInfo.pVertexAttributeDescriptions = nullptr; // Optional
+		std::array<VkVertexInputBindingDescription, 2> bindingDescriptions =
+		{
+			clz::renderer::VBuffer::getVertexBindingDescription(),
+			clz::renderer::UVBuffer::getUVBindingDescription()
+		};
+		std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions =
+		{
+			clz::renderer::VBuffer::getVertexAttributeDescription(),
+			clz::renderer::UVBuffer::getUVAttributeDescription()
+		};
+
+		VkPipelineVertexInputStateCreateInfo vertexInputInfo = {
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+			.pNext = nullptr,
+			.flags = 0,
+			.vertexBindingDescriptionCount = bindingDescriptions.size(),
+			.pVertexBindingDescriptions = bindingDescriptions.data(),
+			.vertexAttributeDescriptionCount = attributeDescriptions.size(),
+			.pVertexAttributeDescriptions = attributeDescriptions.data()};
+
 
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -151,15 +183,23 @@ namespace clz::renderer
 		rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 		// rasterizer.depthClampEnable = VK_FALSE;
 		rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-		// rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-		// rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
-		// rasterizer.depthBiasEnable = VK_FALSE;
+		rasterizer.cullMode = VK_CULL_MODE_NONE;
+		//rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+		rasterizer.depthBiasEnable = VK_FALSE;
 		rasterizer.lineWidth = 1.0f;
 
 		VkPipelineMultisampleStateCreateInfo multisampling{};
 		multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-		// multisampling.sampleShadingEnable = VK_FALSE;
 		multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+
+		VkPipelineDepthStencilStateCreateInfo depthStencil{};
+		depthStencil.sType =
+		    VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+		depthStencil.depthTestEnable = VK_TRUE;
+		depthStencil.depthWriteEnable = VK_TRUE;
+		depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+		depthStencil.depthBoundsTestEnable = VK_FALSE;
+		depthStencil.stencilTestEnable = VK_FALSE;
 
 		VkPipelineColorBlendAttachmentState colorBlendAttachment{};
 		colorBlendAttachment.colorWriteMask =
@@ -173,19 +213,34 @@ namespace clz::renderer
 		colorBlending.attachmentCount = 1;
 		colorBlending.pAttachments = &colorBlendAttachment;
 
+
+		std::array<VkPushConstantRange, 2> pushConstantRange;
+		pushConstantRange[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+		pushConstantRange[0].offset = 0;
+		pushConstantRange[0].size = sizeof(MainPC::vertexData);
+		pushConstantRange[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		pushConstantRange[1].offset = sizeof(MainPC::vertexData);
+		pushConstantRange[1].size = sizeof(MainPC::fragmentData);
+
+
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		pipelineLayoutInfo.pushConstantRangeCount = pushConstantRange.size();
+		pipelineLayoutInfo.pPushConstantRanges = pushConstantRange.data();
+		pipelineLayoutInfo.setLayoutCount = 1;
+		pipelineLayoutInfo.pSetLayouts = &clz::renderer::r_descriptorSetLayout;
 		if (vkCreatePipelineLayout(r_deviceContext.device, &pipelineLayoutInfo, nullptr,
 					   &r_pipelineContext.layout) != VK_SUCCESS) [[unlikely]]
 		{
-			clz::log::error("Could not create pipeline layout");
-			return std::unexpected("could not create pipeline");
+			clz::log::error("vulkan could not create pipeline layout of main pipeline");
+			return false;
 		}
 
-		VkPipelineRenderingCreateInfo pipelineRenderingCI = {
-		    .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
-		    .colorAttachmentCount = 1,
-		    .pColorAttachmentFormats = &r_swapchainContext.format.format};
+		VkPipelineRenderingCreateInfo pipelineRenderingCI = {};
+		pipelineRenderingCI.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+		pipelineRenderingCI.colorAttachmentCount = 1;
+		pipelineRenderingCI.pColorAttachmentFormats = &r_swapchainContext.format.format;
+		pipelineRenderingCI.depthAttachmentFormat = r_swapchainContext.depthFormat;
 
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -197,7 +252,7 @@ namespace clz::renderer
 		pipelineInfo.pViewportState = &viewportState;
 		pipelineInfo.pRasterizationState = &rasterizer;
 		pipelineInfo.pMultisampleState = &multisampling;
-		pipelineInfo.pDepthStencilState = nullptr; // Optional
+		pipelineInfo.pDepthStencilState = &depthStencil;
 		pipelineInfo.pColorBlendState = &colorBlending;
 		pipelineInfo.pDynamicState = &dynamicState;
 		pipelineInfo.layout = r_pipelineContext.layout;
@@ -208,24 +263,33 @@ namespace clz::renderer
 					      &pipelineInfo, nullptr,
 					      &r_pipelineContext.pipeline) != VK_SUCCESS)
 		{
-			clz::log::error("Could not create pipeline");
-			return std::unexpected("could not create pipeline");
+			clz::log::error("vulkan Could not create pipeline");
+			return false;
 		}
 
-		clz::log::debug("created main pipeline");
+		clz::log::info("created main pipeline");
 
-		return {};
+		return true;
 	}
+}
 
+namespace clz::renderer
+{
+	void destroyPipelineContext()
+	{
+		destroyMainPipeline();
+		clz::log::info("destroyed pipeline context");
+	}
 	void destroyMainPipeline()
 	{
 		vkDestroyPipeline(r_deviceContext.device, r_pipelineContext.pipeline, nullptr);
 		vkDestroyPipelineLayout(r_deviceContext.device, r_pipelineContext.layout, nullptr);
+
 		vkDestroyShaderModule(r_deviceContext.device, r_pipelineContext.vertexShader,
 				      nullptr);
 		vkDestroyShaderModule(r_deviceContext.device, r_pipelineContext.fragmentShader,
 				      nullptr);
 
-		clz::log::debug("destroyed main pipeline");
+		clz::log::info("destroyed main pipeline");
 	}
 } // namespace clz::renderer

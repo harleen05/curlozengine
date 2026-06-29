@@ -9,46 +9,52 @@
  */
 #pragma once
 
-#include <expected>
-#include <string>
-
 namespace clz::renderer
 {
 	/**
+	 * @brief Initializes the device context.
+	 * ie all the device handles.
+	 * Can view all of them in context.hpp
+	 */
+	bool initDeviceContext();
+
+	/**
 	 * @brief Initializes instance
-	 * @return void if succeeded or logs the error
-	 * and returns the error message as string
+	 * @return bool if succeeded
+	 * and if not, returns false and prints clz::error
 	 * @note Must be the first handle to be created
 	 */
-	std::expected<void, std::string> createInstance();
+	bool createInstance();
 
 	/**
 	 * @brief Creates debug messenger
-	 * @return void if succeeded or logs the error
-	 * and returns the error message as string
+	 * @return bool if succeeded
+	 * and if not, returns false and prints clz::error
 	 * @note Must be the called after instance has been created
 	 */
-	std::expected<void, std::string> createDebugMessenger();
+	bool createDebugMessenger();
 
 	/**
 	 * @brief Creates window surface
-	 * @return void if succeeded or logs the error
-	 * and returns the error message as string
+	 * @return bool if succeeded
+	 * and if not, returns false and prints clz::error
 	 * @note Must be the called after instance has been created
 	 */
-	std::expected<void, std::string> createSurface();
+	bool createSurface();
 
 	/**
 	 * @brief Selects physical device ie GPU
 	 * based on whether it supports vulkan API 1.3
 	 * and has dynamic rendering support.
 	 *
-	 * @return void if succeeded or logs the error
-	 * and returns the error message as string
+	 * @return bool if succeeded
+	 * and if not, returns false and prints clz::error
 	 * @note Selects the best GPU if multiple GPU's
 	 * are present
 	 */
-	std::expected<void, std::string> selectPhysicalDevice();
+	bool selectPhysicalDevice();
+
+	void extractGPUInfo();
 
 	/**
 	 * @brief Created logical device handle
@@ -57,7 +63,17 @@ namespace clz::renderer
 	 * @note Must be the called after
 	 * physical device has been selected
 	 */
-	std::expected<void, std::string> createLogicalDevice();
+	bool createLogicalDevice();
+}
+
+namespace clz::renderer
+{
+	/**
+	 * @brief Destroys the device context.
+	 * @note Must destroy instance first,
+	 * then surface, then the device
+	 */
+	void destroyDeviceContext();
 
 	/**
 	 * @brief Destroys the instance handle

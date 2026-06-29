@@ -1,15 +1,16 @@
 [engine]
 name = "Curloz Engine"
 version_major = 0
-version_minor = 1
+version_minor = 2
 version_patch = 0
 
 [window]
-width = 1920
-height = 1080
+width = 800
+height = 600
 vsync = false
 refreshrate = 120
 triplebuffering = true
 
 [entity]
+# Entity file. Has to be a JSON. Mention the path here.
 file = "config/entity.json"

@@ -1,5 +1,5 @@
 /**
- * @file variables.hpp
+ * @file vk_types.hpp
  * @author curl0z
  * @brief Global renderer state and shared Vulkan contexts.
  *
@@ -13,7 +13,7 @@
 
 #pragma once
 
-#include "context.hpp"
+#include "context/context.hpp"
 
 namespace clz::renderer
 {
@@ -24,6 +24,10 @@ namespace clz::renderer
 	 * queues, and surface.
 	 */
 	inline DeviceContext r_deviceContext{};
+
+	inline GPUInfo r_gpuInfo{};
+
+	inline CommandContext r_commandContext{};
 
 	/**
 	 * @brief Global swapchain context.
@@ -59,5 +63,5 @@ namespace clz::renderer
 	/**
 	 * @brief Number of frames processed concurrently.
 	 */
-	constexpr uint8_t FRAMES_IN_FLIGHT = 3;
+	constexpr uint8_t r_FRAMES_IN_FLIGHT = 3;
 } // namespace clz::renderer

@@ -22,3 +22,9 @@
 [submodule "external/RmlUi"]
 	path = external/RmlUi
 	url = https://github.com/mikke89/RmlUi.git
+[submodule "external/stb"]
+	path = external/stb
+	url = https://github.com/nothings/stb
+[submodule "external/assimp"]
+	path = external/assimp
+	url = https://github.com/assimp/assimp.git

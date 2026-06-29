@@ -21,8 +21,8 @@ namespace clz::ecs
 	 * For each entity in the JSON, creates an EnTT entity and attaches
 	 * components based on what is present in the JSON.
 	 *
-	 * @return void on success, error string if file is missing or malformed.
+	 * @return true on success, false on failure and prints the error
 	 */
-	std::expected<void, std::string> loadEntities();
+	bool loadEntities();
 
 } // namespace clz::ecs

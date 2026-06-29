@@ -34,11 +34,10 @@ namespace clz::window
 	void update();
 
 	/**
-	 * @brief Returns window handle
-	 * @warning not to be used outside window subsystem
-	 * @return pointer to GLFWwindow
+	 * @brief Returns actual framebuffer extents
+	 * Basically coords in pixel space not screen space
+	 * @param width
+	 * @param height
 	 */
-	GLFWwindow* getWindowHandle();
-
 	void getFramebufferExtents(int* width, int* height);
 } // namespace clz::window

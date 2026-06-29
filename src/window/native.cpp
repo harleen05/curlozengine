@@ -1,4 +1,4 @@
-/*
+/**
  * @file native.cpp
  * @author curl0z
  * @brief implements all the internal GLFW functions

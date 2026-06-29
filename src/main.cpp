@@ -31,17 +31,28 @@ int main()
 	clz::log::info("Welcome to " + clz::config::getAppName());
 	clz::config::printAppVersion();
 
+
+
+
+
 	// Start clock, Whole system uses it, so make sure to start it first
 	clz::time::init();
+
+
+
+
 
 	// Initialize Window. Should be the first subsystem to initialize
 	clz::window::init();
 	if (clz::log::errorOccurred()) [[unlikely]]
 		return 1;
 
+
+
+
+
 	// Initialize renderer
-	clz::renderer::init();
-	if (clz::log::errorOccurred()) [[unlikely]]
+	if (!clz::renderer::init()) [[unlikely]]
 		return 1;
 
 	// Initialize entities
@@ -66,7 +77,7 @@ int main()
 	{
 		clz::time::computeTime();
 		clz::window::update();
-		clz::renderer::update(clz::time::getDeltaTime());
+		clz::renderer::update();
 	}
 
 	// Shut down

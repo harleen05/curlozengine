@@ -1,9 +1,11 @@
-/*
+/**
  * @file vulkanhelper.hpp
  * @brief Public header to help vulkan
  */
 #pragma once
 
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
 #include <expected>
 #include <string>
 #include <vector>
@@ -11,8 +13,29 @@
 
 namespace clz::window
 {
+	/**
+	 * @brief Returns all required vulkan extensions to interact with window
+	 * @param rRequiredExtensions All vector where all extensions will be stored
+	 * @return void if function was a success
+	 * @return string as error about what went wrong
+	 */
 	std::expected<void, std::string>
 	getRequiredVulkanExtensions(std::vector<const char*>& rRequiredExtensions);
+
+	/**
+	 * @brief Creates vulkan surface
+	 * @param instance Vulkan instance
+	 * @param rSurface reference of surface to be created
+	 * @return void if function was a success
+	 * @return string as error about what went wrong
+	 */
 	std::expected<void, std::string> createVulkanSurface(VkInstance instance,
 							     VkSurfaceKHR& rSurface);
+
+	/**
+	 * @brief Callback function that is called
+	 * whenever window's framebuffer extents are changed.
+	 * Hints renderer about this change too
+	 */
+	void hintRendererAboutResize(GLFWwindow* window, int, int);
 } // namespace clz::window

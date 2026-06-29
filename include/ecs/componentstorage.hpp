@@ -46,12 +46,12 @@ namespace clz::ecs
 	 * @note Do not access storage, dense, or sparse directly from systems.
 	 * Use componentmanager.hpp functions instead.
 	 */
-	template<typename T>
-	struct ComponentStorage : IComponentStorage
+	template <typename T> struct ComponentStorage : IComponentStorage
 	{
-		std::vector<T> storage;        ///< Contiguous component data. Iterate this for hot paths.
-		std::vector<entity> dense;     ///< Entity that owns storage[i]. Parallel to storage.
-		std::vector<uint32_t> sparse;  ///< sparse[entity] = index into storage. NULL_ENTITY if absent.
+		std::vector<T> storage; ///< Contiguous component data. Iterate this for hot paths.
+		std::vector<entity> dense; ///< Entity that owns storage[i]. Parallel to storage.
+		std::vector<uint32_t>
+		    sparse; ///< sparse[entity] = index into storage. NULL_ENTITY if absent.
 
 		/// @brief Initializes sparse array to NULL_ENTITY for MAX_ENTITIES slots.
 		ComponentStorage()
@@ -73,11 +73,11 @@ namespace clz::ecs
 				return;
 
 			uint32_t index = sparse[e];
-			uint32_t last  = storage.size() - 1;
+			uint32_t last = storage.size() - 1;
 
 			// swap target with last
-			storage[index]       = storage[last];
-			dense[index]         = dense[last];
+			storage[index] = storage[last];
+			dense[index] = dense[last];
 			sparse[dense[index]] = index; // update moved entity's sparse entry
 
 			dense.pop_back();

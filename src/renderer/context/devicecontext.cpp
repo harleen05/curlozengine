@@ -4,36 +4,100 @@
  * @brief Implementation of the initialization
  * and cleanup of device context
  */
-#include "renderer/devicecontext.hpp"
+
+#include "renderer/context/devicecontext.hpp"
 #include "core/logs.hpp"
-#include "renderer/variables.hpp"
+#include "renderer/vk_types.hpp"
 #include <algorithm>
 #include <config/config.hpp>
 #include <cstring>
 #include <vector>
+#include <array>
 #include <vulkan/vulkan.h>
 #include <window/vulkanhelper.hpp>
 
 namespace clz::renderer
 {
 #ifdef CLZ_DEBUG
-	constexpr bool enableValidationLayers = true;
+	constexpr bool r_enableValidationLayers = true;
 #else
-	constexpr bool enableValidationLayers = false;
+	constexpr bool r_enableValidationLayers = false;
 #endif
 
-	std::expected<void, std::string>
-	getRequiredInstanceExtensions(std::vector<const char*>& rRequiredExtensions)
+	constexpr auto r_debugExtensionName = VK_EXT_DEBUG_UTILS_EXTENSION_NAME;
+	constexpr auto r_validationLayers = "VK_LAYER_KHRONOS_validation";
+	constexpr std::array<const char*, 1> r_requiredDeviceExtensions =
 	{
-		auto result = clz::window::getRequiredVulkanExtensions(rRequiredExtensions);
-		if (!result)
+		VK_KHR_SWAPCHAIN_EXTENSION_NAME
+	};
+
+}
+
+
+namespace clz::renderer
+{
+	bool initDeviceContext()
+	{
+		if (!createInstance())
 		{
-			return std::unexpected(result.error());
+			clz::log::error("Could not create instance");
+			clz::log::error("Could not create device context");
+			return false;
 		}
 
-		if (enableValidationLayers)
+		if (!createDebugMessenger())
 		{
-			rRequiredExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+			clz::log::error("Could not create debug messenger");
+			clz::log::error("Could not create device context");
+			return false;
+		}
+
+		if (!createSurface())
+		{
+			clz::log::error("Could not create surface");
+			clz::log::error("Could not create device context");
+			return false;
+		}
+
+		if (!selectPhysicalDevice())
+		{
+			clz::log::error("Could not select any physical device");
+			clz::log::error("Could not create device context");
+			return false;
+		}
+
+		extractGPUInfo();
+
+		if (!createLogicalDevice())
+		{
+			clz::log::error("Could not create logical device");
+			clz::log::error("Could not create device context");
+			return false;
+		}
+
+		clz::log::info("renderer: initialized device context successfully");
+
+		return true;
+	}
+
+	// Instance Creation Part
+
+	/**
+	 * @brief Retrieves all required instance extensions
+	 * @param rRequiredExtensions
+	 * @return true if retrieved all extensions succesfully, else prints clz::error and returns false
+	 */
+	bool getRequiredInstanceExtensions(std::vector<const char*>& rRequiredExtensions)
+	{
+		if (!clz::window::getRequiredVulkanExtensions(rRequiredExtensions))
+		{
+			clz::log::error("Unable to retrieve instance extensions from window");
+			return false;
+		}
+
+		if (r_enableValidationLayers)
+		{
+			rRequiredExtensions.push_back(r_debugExtensionName);
 		}
 
 		uint32_t count = 0;
@@ -43,23 +107,24 @@ namespace clz::renderer
 
 		for (auto requiredExtension : rRequiredExtensions)
 		{
-			const bool found =
-			    std::any_of(availableExtensions.begin(), availableExtensions.end(),
-					[&](auto& availableExtension) {
-						return std::strcmp(availableExtension.extensionName,
-								   requiredExtension) == 0;
-					});
+			const bool found = std::ranges::any_of(
+			    availableExtensions.begin(), availableExtensions.end(),
+			    [&](auto& availableExtension) {
+				    return std::strcmp(availableExtension.extensionName,
+						       requiredExtension) == 0;
+			    });
 			if (!found)
-				return std::unexpected(
-				    "Extension: " + std::string(requiredExtension) +
-				      " not available");
+			{
+				clz::log::error("Extension: " + std::string(requiredExtension) +
+						" is not available");
+				return false;
+			}
 		}
 		clz::log::debug("All required instance extensions present");
-		return {};
+		return true;
 	}
 
-	std::expected<void, std::string>
-	getValidationLayers(std::vector<const char*>& rValidationLayers)
+	bool getValidationLayers(std::vector<const char*>& rValidationLayers)
 	{
 		rValidationLayers = {"VK_LAYER_KHRONOS_validation"};
 
@@ -70,23 +135,24 @@ namespace clz::renderer
 
 		for (auto layer : rValidationLayers)
 		{
-			const bool found = std::any_of(
+			const bool found = std::ranges::any_of(
 			    availableLayers.begin(), availableLayers.end(),
 			    [&](auto availableLayer) {
 				    return std::strcmp(layer, availableLayer.layerName) == 0;
 			    });
 			if (!found)
 			{
-				return std::unexpected("Layer: " + std::string(layer) +
+				clz::log::error("Layer: " + std::string(layer) +
 						       " not available");
+				return false;
 			}
 		}
 
 		clz::log::debug("All requested layers present");
-		return {};
+		return true;
 	}
 
-	std::expected<void, std::string> createInstance()
+	bool createInstance()
 	{
 		// Application Info
 		VkApplicationInfo appInfo = {};
@@ -101,6 +167,7 @@ namespace clz::renderer
 		    VK_MAKE_VERSION(clz::config::getInt("engine", "version_major", 0),
 				    clz::config::getInt("engine", "version_minor", 0),
 				    clz::config::getInt("engine", "version_patch", 0));
+
 		// Our application's name
 		appInfo.pEngineName = "Curloz Engine";
 		// Which API version we want to use
@@ -116,9 +183,11 @@ namespace clz::renderer
 
 		// Get Extensions
 		std::vector<const char*> requiredExtensions;
-		auto instanceResult = getRequiredInstanceExtensions(requiredExtensions);
-		if (!instanceResult)
-			return std::unexpected(instanceResult.error());
+		if (!getRequiredInstanceExtensions(requiredExtensions))
+		{
+			clz::log::error("All required device extensions not present");
+			return false;
+		}
 
 		// Send info about extensions
 		instanceInfo.enabledExtensionCount = requiredExtensions.size();
@@ -126,11 +195,13 @@ namespace clz::renderer
 
 		// Enable layers
 		std::vector<const char*> layers;
-		if (auto layersResult = getValidationLayers(layers); !layersResult)
-			return std::unexpected(layersResult.error());
-
-		if (enableValidationLayers)
+		if (r_enableValidationLayers)
 		{
+			if (!getValidationLayers(layers))
+			{
+				clz::log::error("Validation layers not present");
+				return false;
+			}
 			instanceInfo.enabledLayerCount = layers.size();
 			instanceInfo.ppEnabledLayerNames = layers.data();
 		}
@@ -140,17 +211,22 @@ namespace clz::renderer
 			instanceInfo.ppEnabledLayerNames = nullptr;
 		}
 
-		if (const VkResult instanceCreationResult = vkCreateInstance(&instanceInfo, nullptr, &r_deviceContext.instance);
-			instanceCreationResult != VK_SUCCESS)
+
+		if (vkCreateInstance(&instanceInfo, nullptr,
+				&r_deviceContext.instance)!= VK_SUCCESS)
 		{
-			clz::log::error("Could not create instance");
-			return std::unexpected("Could not create instance");
+			clz::log::error("Vulkan could not create instance");
+			return false;
 		}
 
-		clz::log::debug("renderer: created instance");
-		return {};
+		clz::log::info("renderer: created instance");
+		return true;
 	}
 
+
+
+
+	// Debug messenger and validation layers
 	VKAPI_ATTR VkBool32 VKAPI_CALL
 	printMessage(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 		     VkDebugUtilsMessageTypeFlagsEXT messageType,
@@ -176,7 +252,7 @@ namespace clz::renderer
 		return VK_FALSE;
 	}
 
-	std::expected<void, std::string> createDebugMessenger()
+	bool createDebugMessenger()
 	{
 		VkDebugUtilsMessengerCreateInfoEXT messengerInfo{};
 		messengerInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
@@ -196,33 +272,35 @@ namespace clz::renderer
 		{
 			clz::log::error(
 			    "renderer: Could not find the debug messenger creator function");
-			return std::unexpected(
-			    "Could not find the debug messenger creator function");
+			return false;
 		}
 
 		if (createMessenger(r_deviceContext.instance, &messengerInfo, nullptr,
 				    &r_deviceContext.debugMessenger) != VK_SUCCESS)
 		{
-			clz::log::error("renderer: Could not create debug messenger");
-			return std::unexpected("could not create debug messenger");
+			clz::log::error("vulkan Could not create debug messenger");
+			return false;
 		}
-		clz::log::debug("renderer: Created Debug Messenger");
+		clz::log::info("renderer: Created Debug Messenger");
 
-		return {};
+		return true;
 	}
 
-	std::expected<void, std::string> createSurface()
+	bool createSurface()
 	{
-		auto result = clz::window::createVulkanSurface(r_deviceContext.instance,
-							       r_deviceContext.surface);
-		if (!result)
-			return std::unexpected(result.error());
+		if (auto surfaceResult = clz::window::createVulkanSurface(r_deviceContext.instance,
+									  r_deviceContext.surface);
+		    !surfaceResult)
+		{
+			clz::log::error("Vulkan could not create surface");
+			return false;
+		}
 
-		clz::log::debug("Created window surface");
-		return {};
+		clz::log::info("Created window surface");
+		return true;
 	}
 
-	std::expected<void, std::string> selectPhysicalDevice()
+	bool selectPhysicalDevice()
 	{
 		uint32_t numPhysicalDevices = 0;
 		vkEnumeratePhysicalDevices(r_deviceContext.instance, &numPhysicalDevices, nullptr);
@@ -231,7 +309,7 @@ namespace clz::renderer
 					   physicalDevices.data());
 
 		uint32_t maxScore = 0;
-		for (auto physicalDevice : physicalDevices)
+		for (const auto physicalDevice : physicalDevices)
 		{
 			VkPhysicalDeviceProperties deviceProperties;
 			vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
@@ -302,68 +380,73 @@ namespace clz::renderer
 			if (deviceScore > maxScore)
 			{
 				maxScore = deviceScore;
-				r_deviceContext.gpu = physicalDevice;
+				r_deviceContext.physicalDevice = physicalDevice;
 			}
 		}
 
-		if (r_deviceContext.gpu == VK_NULL_HANDLE)
+		if (r_deviceContext.physicalDevice== VK_NULL_HANDLE)
 		{
 			clz::log::error("No Suitable GPU found");
-			return std::unexpected("No Suitable GPU found");
+			return false;
 		}
-		VkPhysicalDeviceProperties selecrtedDeviceProperties;
-		vkGetPhysicalDeviceProperties(r_deviceContext.gpu, &selecrtedDeviceProperties);
+		VkPhysicalDeviceProperties selectedDeviceProperties;
+		vkGetPhysicalDeviceProperties(r_deviceContext.physicalDevice, &selectedDeviceProperties);
 
-		clz::log::debug("Using GPU: " + std::string(selecrtedDeviceProperties.deviceName));
+		clz::log::info("Using GPU: " + std::string(selectedDeviceProperties.deviceName));
 
-		return {};
+		return true;
 	}
 
-	std::expected<void, std::string>
-	getRequiredDeviceExtensions(std::vector<const char*>& rRequiredDeviceExtensions)
+	void extractGPUInfo()
 	{
-		// enable swapchain extension
-		rRequiredDeviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+		VkPhysicalDeviceProperties deviceProperties;
+		vkGetPhysicalDeviceProperties(r_deviceContext.physicalDevice, &deviceProperties);
+		r_gpuInfo.uniformBufferOffsetAlignment = deviceProperties.limits.minUniformBufferOffsetAlignment;
+		r_gpuInfo.maxAnisotropy = deviceProperties.limits.maxSamplerAnisotropy;
+	}
 
+	bool checkDeviceExtensions()
+	{
 		uint32_t deviceExtensionCount = 0;
-		vkEnumerateDeviceExtensionProperties(r_deviceContext.gpu, nullptr,
+		vkEnumerateDeviceExtensionProperties(r_deviceContext.physicalDevice, nullptr,
 						     &deviceExtensionCount, nullptr);
 		std::vector<VkExtensionProperties> availableDeviceExtensions(deviceExtensionCount);
-		vkEnumerateDeviceExtensionProperties(r_deviceContext.gpu, nullptr,
+		vkEnumerateDeviceExtensionProperties(r_deviceContext.physicalDevice, nullptr,
 						     &deviceExtensionCount,
 						     availableDeviceExtensions.data());
 
-		for (auto requiredDeviceExtension : rRequiredDeviceExtensions)
+		for (auto requiredDeviceExtension : r_requiredDeviceExtensions)
 		{
-			const bool found = std::any_of(
-			    availableDeviceExtensions.begin(), availableDeviceExtensions.end(),
-			    [&](auto availableExtension) {
+			const bool found = std::ranges::any_of(
+				availableDeviceExtensions, [&](auto availableExtension) {
 				    return std::strcmp(requiredDeviceExtension,
-						       availableExtension.extensionName) == 0;
+							availableExtension.extensionName) == 0;
 			    });
+
 			if (!found)
 			{
 				clz::log::error("required vulkan device extension: " +
 						std::string(requiredDeviceExtension) +
 						" is not supported by the selected GPU");
-				return std::unexpected("required vulkan device extension: " +
-						       std::string(requiredDeviceExtension) +
-						       " is not supported by the selected GPU");
+				return false;
 			}
 		}
 
-		clz::log::debug("All device extensions present");
-		return {};
+		clz::log::info("All device extensions present");
+		return true;
 	}
 
-	std::expected<void, std::string> createLogicalDevice()
+	bool createLogicalDevice()
 	{
-		VkDeviceCreateInfo deviceInfo = {};
-		deviceInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+		// Checking if all required device extensions are present??
+		if (!checkDeviceExtensions())
+		{
+			clz::log::error("Could not create logical device, as extensions are not present");
+			return false;
+		}
 
-		// vector holding all the queue infos
+		// Checking if queue indexes are same or different
 		std::vector<VkDeviceQueueCreateInfo> queueInfos;
-
 		constexpr float queuePriority = 1.0f;
 		if (r_deviceContext.graphicsFamily == r_deviceContext.presentFamily)
 		{
@@ -392,54 +475,78 @@ namespace clz::renderer
 			queueInfos.push_back(presentQueueInfo);
 		}
 
-		deviceInfo.queueCreateInfoCount = static_cast<uint32_t>(queueInfos.size());
-		deviceInfo.pQueueCreateInfos = queueInfos.data();
+		// Descriptor indexing - for textures
+		VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexingFeatures{};
+		descriptorIndexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+		descriptorIndexingFeatures.pNext = nullptr;
+		descriptorIndexingFeatures.descriptorBindingPartiallyBound = VK_TRUE;
+		descriptorIndexingFeatures.descriptorBindingSampledImageUpdateAfterBind = VK_TRUE;
 
-		// Device Features — enable dynamic rendering
+
+		// Vulkan 1.3 device Features — enable dynamic rendering
 		VkPhysicalDeviceVulkan13Features features13 = {};
 		features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+		features13.pNext = &descriptorIndexingFeatures;
 		features13.dynamicRendering = VK_TRUE;
 		features13.synchronization2 = VK_TRUE;
-		features13.pNext = nullptr;
 
-		deviceInfo.pNext = &features13;
+		// Normal device features
+		VkPhysicalDeviceFeatures2 deviceFeatures = {};
+		deviceFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+		deviceFeatures.pNext = &features13;	// chain features 13
+		deviceFeatures.features.samplerAnisotropy = VK_TRUE;
 
-		std::vector<const char*> requiredDeviceExtensions;
-		getRequiredDeviceExtensions(requiredDeviceExtensions);
-
+		VkDeviceCreateInfo deviceInfo = {};
+		deviceInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+		deviceInfo.pNext = &deviceFeatures;	// chain all required features
+		deviceInfo.queueCreateInfoCount = static_cast<uint32_t>(queueInfos.size());
+		deviceInfo.pQueueCreateInfos = queueInfos.data();
 		deviceInfo.enabledExtensionCount =
-		    static_cast<uint32_t>(requiredDeviceExtensions.size());
-		deviceInfo.ppEnabledExtensionNames = requiredDeviceExtensions.data();
+		    static_cast<uint32_t>(r_requiredDeviceExtensions.size());
+		deviceInfo.ppEnabledExtensionNames = r_requiredDeviceExtensions.data();
 
-		deviceInfo.pEnabledFeatures = nullptr;
-
-		if (vkCreateDevice(r_deviceContext.gpu, &deviceInfo, nullptr,
+		if (vkCreateDevice(r_deviceContext.physicalDevice, &deviceInfo, nullptr,
 				   &r_deviceContext.device) != VK_SUCCESS)
 		{
 			clz::log::error("Failed to create renderer's logical device");
-			return std::unexpected("Failed to create renderer's logical device");
+			return false;
 		}
-		clz::log::debug("created vulkan logical device");
+		clz::log::info("created vulkan logical device");
 
 		vkGetDeviceQueue(r_deviceContext.device, r_deviceContext.graphicsFamily.value(), 0,
 				 &r_deviceContext.graphicsQueue);
 		vkGetDeviceQueue(r_deviceContext.device, r_deviceContext.presentFamily.value(), 0,
 				 &r_deviceContext.presentQueue);
 
-		clz::log::debug("created logical device");
+		clz::log::info("created logical device");
 
-		return {};
+		return true;
+	}
+}
+
+
+// Destroyers
+namespace clz::renderer
+{
+	void destroyDeviceContext()
+	{
+		destroyDevice();
+		destroySurface();
+		destroyDebugMessenger();
+		destroyInstance();
+
+		clz::log::info("Destroyed Device Context Successfully");
 	}
 
 	void destroyInstance()
 	{
 		vkDestroyInstance(r_deviceContext.instance, nullptr);
-		clz::log::debug("Destroyed vulkan instance");
+		clz::log::info("Destroyed vulkan instance");
 	}
 
 	void destroyDebugMessenger()
 	{
-		auto destroyMessenger =
+		const auto destroyMessenger =
 		    reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(
 			r_deviceContext.instance, "vkDestroyDebugUtilsMessengerEXT"));
 		if (destroyMessenger != nullptr)
@@ -447,18 +554,18 @@ namespace clz::renderer
 			destroyMessenger(r_deviceContext.instance, r_deviceContext.debugMessenger,
 					 nullptr);
 		}
-		clz::log::debug("Destroyed debug messenger");
+		clz::log::info("Destroyed debug messenger");
 	}
 
 	void destroySurface()
 	{
 		vkDestroySurfaceKHR(r_deviceContext.instance, r_deviceContext.surface, nullptr);
-		clz::log::debug("Destroyed surface instance");
+		clz::log::info("Destroyed surface instance");
 	}
 
 	void destroyDevice()
 	{
 		vkDestroyDevice(r_deviceContext.device, nullptr);
-		clz::log::debug("Destroyed logical device");
+		clz::log::info("Destroyed logical device");
 	}
 } // namespace clz::renderer

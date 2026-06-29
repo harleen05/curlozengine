@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <limits>
 #include <vector>
+#include <string>
 
 namespace clz::ecs
 {
@@ -27,5 +28,8 @@ namespace clz::ecs
 
 	/// @brief All entity IDs. Index is not the same as entity ID after removals.
 	inline std::vector<entity> ecs_entities;
+
+	/// @brief All entity's names
+	inline std::vector<std::string> ecs_entityName;
 
 } // namespace clz::ecs

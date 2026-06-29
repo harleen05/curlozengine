@@ -23,14 +23,13 @@ namespace clz::ecs
 	 *
 	 * @return Unique entity ID.
 	 */
-	inline uint32_t createEntity()
+	inline uint32_t createEntity(const std::string& name)
 	{
 		uint32_t id = ecs_entities.size();
 		ecs_entities.emplace_back(id);
+		ecs_entityName.emplace_back(name);
 		return id;
 	}
-
-
 
 	/**
 	 * @brief Removes an entity and all its components.
@@ -44,6 +43,8 @@ namespace clz::ecs
 	inline void removeEntity(const entity e)
 	{
 		removeAllComponentsForEntity(e);
+		ecs_entities[e] = NULL_ENTITY;
+		ecs_entityName[e] = "INVALID_ENTITY";
 	}
 
 	/**

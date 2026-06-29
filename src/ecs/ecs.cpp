@@ -6,21 +6,21 @@
 
 #include "ecs/ecs.hpp"
 #include "core/logs.hpp"
-#include "ecs/componentmanager.hpp"
 #include "ecs/entitymanager.hpp"
 #include "ecs/scene.hpp"
 
 namespace clz::ecs
 {
-	void init()
+	bool init()
 	{
-		if (auto result = loadEntities(); !result)
+		if (!loadEntities())
 		{
-			clz::log::error(result.error());
-			return;
+			clz::log::error("Failed to load entities");
+			return false;
 		}
 
-		clz::log::debug("ECS subsystem initialized");
+		clz::log::info("ECS subsystem initialized");
+		return true;
 	}
 
 	void update()
@@ -30,9 +30,8 @@ namespace clz::ecs
 
 	void shutdown()
 	{
-		deleteAllComponents();
 		clearEntities();
-		clz::log::debug("ECS subsystem shutdown");
+		clz::log::info("ECS subsystem shutdown");
 	}
 
 } // namespace clz::ecs

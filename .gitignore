@@ -3,4 +3,10 @@
 build
 compile_commands.json
 docs
-.clangd
+
+# shader binaries
+shader/triangle.vert.spirv
+shader/triangle.frag.spirv
+
+# Test models
+assets/models/*

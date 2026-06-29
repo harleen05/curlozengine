@@ -13,12 +13,13 @@ A Vulkan 1.3 game engine written in C++23.
 | Physics | Jolt Physics* |
 | Audio | OpenAL Soft* |
 | Math | # |
-| Model Loading | fastgltf* |
+| Model Loading | assimp |
 | Animation | ozz-animation* |
 | Build System | CMake + Ninja |
 
 ---
 > '#' Signifies that no external library is used and is self authorized
+
 > '*' Signifies that system is planned and has not yet been implemented yet, or needs further work
 ---
 
